@@ -6,8 +6,8 @@ class Property(BaseModel):
     title: str
     description: Optional[str] = None
     locality: str
-    city: str
-    state: str
+    city: Optional[str] = None
+    state: Optional[str] = None
     price: float
     bhk: int
     bathrooms: int

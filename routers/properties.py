@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from core.opensearch_client import client
+from core.opensearch_client import client #fetch the client attribute from opensearch_client.py
 from models.property import Property
 
-router = APIRouter(prefix="/properties", tags=["Properties"])
+router = APIRouter(prefix="/properties", tags=["Properties"]) #fix this later, start with /api/properties
 
-INDEX = "properties"
+INDEX = "properties" #name of the index in OpenSearch
 
 # Add new property
 @router.post("/")
@@ -40,7 +40,7 @@ def delete_property(property_id: str):
         raise HTTPException(status_code=404, detail="Property not found")
     return {"result": "Property deleted"}
 
-#generic search template
+#main query for searching properties
 @router.get("/search/")
 def search_properties(
     locality: str = None,
