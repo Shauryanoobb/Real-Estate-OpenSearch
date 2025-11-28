@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Search & List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-6">
+
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 class="text-3xl font-extrabold text-indigo-700 mb-6 border-b pb-2">Real Estate Property Portal</h1>
+
+        <div class="mb-8 flex space-x-4">
+            <a href="add_update.html" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-150">➕ Add New Property</a>
+            <button onclick="listAllProperties()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All Properties</button>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Find Your Property</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-indigo-50 p-6 rounded-xl mb-8">
+
+            <input id="locality" class="p-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500" placeholder="Locality">
+            <input id="keywords" class="p-3 border rounded-lg" placeholder="Description keywords">
+            <input id="title_keywords" class="p-3 border rounded-lg" placeholder="Title keywords">
+            <input id="bhk" type="number" class="p-3 border rounded-lg" placeholder="BHK">
+            <input id="min_sqft" type="number" class="p-3 border rounded-lg" placeholder="Min Sqft">
+            <input id="max_sqft" type="number" class="p-3 border rounded-lg" placeholder="Max Sqft">
+            <input id="min_price" type="number" class="p-3 border rounded-lg" placeholder="Min Price">
+            <input id="max_price" type="number" class="p-3 border rounded-lg" placeholder="Max Price">
+
+            <select id="is_furnished" class="p-3 border rounded-lg">
+                <option value="">Furnished?</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
+            <select id="has_lift" class="p-3 border rounded-lg">
+                <option value="">Lift Available?</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+            </select>
+            
+            <button onclick="searchProperties()" class="col-span-1 md:col-span-2 bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">
+                Search
+            </button>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mt-6 mb-4">Property Listings:</h2>
+        <div id="results" class="space-y-6">
+            <p class="text-gray-500" id="status_message">Use the search bar or click "List All Properties" to view listings.</p>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = "http://localhost:8000/properties"; // Adjust if your prefix changes
+        const resultsContainer = document.getElementById("results");
+        const statusMessage = document.getElementById("status_message");
+
+        function renderResults(data) {
+            resultsContainer.innerHTML = '';
+            statusMessage.style.display = 'none';
+
+            if (!data.hits || data.hits.hits.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold">No properties found matching your criteria.</p>';
+                return;
+            }
+
+            data.hits.hits.forEach(hit => {
+                const p = hit._source;
+                const propertyId = hit._id; // OpenSearch ID is used for Get/Update/Delete
+                const resultCard = `
+                    <div class="p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
+                        <h3 class="text-xl font-bold text-indigo-800">${p.title} <span class="text-sm font-normal text-gray-500">(ID: ${propertyId})</span></h3>
+                        <p class="text-2xl font-extrabold text-green-600 my-2">₹${p.price.toLocaleString('en-IN')}</p>
+                        <p class="text-gray-600">📍 **${p.locality}**, ${p.city || ''}</p>
+                        <p class="text-gray-700">🛏️ **${p.bhk} BHK** • 📐 ${p.area_sqft} sqft • 🛁 ${p.bathrooms} Baths</p>
+                        <p class="text-sm text-gray-500 mt-3">${p.description ? p.description.substring(0, 150) + '...' : 'No description available.'}</p>
+                        <div class="mt-4 space-x-3">
+                             <a href="add_update.html?id=${propertyId}" class="text-sm font-medium text-yellow-600 hover:text-yellow-700">✏️ Edit</a>
+                             <button onclick="deleteProperty('${propertyId}')" class="text-sm font-medium text-red-600 hover:text-red-700">🗑️ Delete</button>
+                             <a href="#" onclick="viewProperty('${propertyId}')" class="text-sm font-medium text-blue-600 hover:text-blue-700">👁️ View Details</a>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.innerHTML += resultCard;
+            });
+        }
+
+        async function listAllProperties() {
+            statusMessage.textContent = 'Fetching all properties...';
+            statusMessage.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            try {
+                const res = await fetch(`${BASE_URL}/?size=50`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                renderResults(data);
+            } catch (error) {
+                statusMessage.textContent = `Error listing properties: ${error.message}`;
+                statusMessage.className = 'text-red-500 font-semibold';
+            }
+        }
+
+        async function searchProperties() {
+            const params = new URLSearchParams();
+            const fields = [
+                "locality", "keywords", "title_keywords", "bhk",
+                "min_sqft", "max_sqft", "min_price", "max_price",
+                "is_furnished", "has_lift"
+            ];
+
+            fields.forEach(f => {
+                const value = document.getElementById(f).value;
+                if (value !== "") params.append(f, value);
+            });
+
+            statusMessage.textContent = 'Searching properties...';
+            statusMessage.style.display = 'block';
+            resultsContainer.innerHTML = '';
+
+            try {
+                const url = `${BASE_URL}/search/?${params.toString()}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                renderResults(data);
+            } catch (error) {
+                statusMessage.textContent = `Error searching properties: ${error.message}`;
+                statusMessage.className = 'text-red-500 font-semibold';
+            }
+        }
+        
+        async function deleteProperty(propertyId) {
+            if (!confirm(`Are you sure you want to delete property with ID: ${propertyId}?`)) return;
+
+            try {
+                const res = await fetch(`${BASE_URL}/${propertyId}`, { method: 'DELETE' });
+                if (res.status === 404) {
+                    alert('Property not found.');
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                alert(`Property ${propertyId} deleted successfully.`);
+                // Refresh the list after deletion
+                const currentSearch = document.getElementById('bhk').value !== '' || document.getElementById('locality').value !== ''; // simplified check
+                if (currentSearch) {
+                    searchProperties();
+                } else {
+                    listAllProperties();
+                }
+
+            } catch (error) {
+                alert(`Error deleting property: ${error.message}`);
+            }
+        }
+
+        function viewProperty(propertyId) {
+            alert(`Viewing details for property ID: ${propertyId}\n(In a real app, this would open a detailed view page or modal.)`);
+        }
+        
+        // Initial load check
+        document.addEventListener('DOMContentLoaded', listAllProperties);
+
+    </script>
+
+</body>
+</html>
