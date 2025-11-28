@@ -9,8 +9,36 @@ INDEX = "properties" #name of the index in OpenSearch
 # Add new property
 @router.post("/")
 def add_property(property: Property):
-    response = client.index(index=INDEX, id=property.property_id, body=property.dict())
-    return {"result": "Property added", "response": response}
+    # Determine the document ID to use for OpenSearch
+    # If property.property_id is provided by the user, use it as the OpenSearch ID
+    # If not, let OpenSearch automatically generate the ID.
+    
+    body_data = property.dict(exclude_none=True)
+    
+    opensearch_id = body_data.pop("property_id", None) # Remove it from body if it exists
+
+    if opensearch_id:
+        # Case 1: User explicitly provided a property_id. Use it as the OpenSearch document ID.
+        response = client.index(index=INDEX, id=opensearch_id, body=body_data)
+        
+    else:
+        # Case 2: No property_id provided. Let OpenSearch auto-generate the ID.
+        # When 'id' is omitted from client.index, OpenSearch assigns a unique ID.
+        response = client.index(index=INDEX, body=body_data)
+    
+    # Return the OpenSearch ID for the frontend to confirm creation/use for later updates.
+    return {"result": "Property added", "opensearch_id": response["_id"]}
+
+# Update property (PUT /properties/{opensearch_id})
+@router.put("/{opensearch_id}")
+def update_property(opensearch_id: str, property: Property):
+    # Crucially, we use opensearch_id from the URL path, not property.property_id from the body.
+    # We strip property_id from the body to avoid confusion, though Pydantic might force it.
+    body_data = property.dict(exclude_none=True)
+    body_data.pop("property_id", None) # Ensure property_id is not included in the doc update payload
+    
+    response = client.update(index=INDEX, id=opensearch_id, body={"doc": body_data})
+    return {"result": "Property updated", "opensearch_id": opensearch_id, "response": response}
 
 # Get all properties
 @router.get("/")
@@ -27,10 +55,10 @@ def get_property(property_id: str):
     return response
 
 # Update property
-@router.put("/{property_id}")
-def update_property(property_id: str, property: Property):
-    response = client.update(index=INDEX, id=property_id, body={"doc": property.dict()})
-    return {"result": "Property updated", "response": response}
+# @router.put("/{property_id}")
+# def update_property(property_id: str, property: Property):
+#     response = client.update(index=INDEX, id=property_id, body={"doc": property.dict()})
+#     return {"result": "Property updated", "response": response}
 
 # Delete property
 @router.delete("/{property_id}")

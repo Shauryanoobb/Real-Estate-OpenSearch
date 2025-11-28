@@ -14,13 +14,19 @@
 
         <form id="propertyForm" class="space-y-6">
             
+            <!-- Hidden field to store the OpenSearch ID when updating (the document ID) -->
+            <input type="hidden" id="opensearch_id_hidden">
+            
             <div class="border p-4 rounded-xl">
                 <h2 class="text-xl font-semibold text-indigo-600 mb-4">Basic Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="col-span-1" id="property_id_group">
-                        <label class="block text-sm font-medium text-gray-700">Property ID (Used by OpenSearch)</label>
-                        <input type="text" id="property_id" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    
+                    <!-- ID DISPLAY: Shown only when in Update mode (for reference) -->
+                    <div class="col-span-2 hidden mb-4" id="property_id_display"> 
+                        <label class="block text-sm font-medium text-gray-700">OpenSearch ID (Cannot be changed)</label>
+                        <p id="displayed_property_id" class="p-2 bg-gray-100 border border-gray-300 rounded-md font-mono text-sm"></p>
                     </div>
+                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Title</label>
                         <input type="text" id="title" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -97,32 +103,42 @@
     </div>
 
     <script>
-        //const BASE_URL = "http://localhost:8000/api/properties";
-        const BASE_URL = window.location.origin + "/api/properties"; //when using ngrok
+        const BASE_URL = window.location.origin + "/api/properties";
         const urlParams = new URLSearchParams(window.location.search);
         const propertyIdParam = urlParams.get('id');
         const form = document.getElementById('propertyForm');
-        const propertyIdInput = document.getElementById('property_id');
         const responseMessage = document.getElementById('response_message');
+        const hiddenIdInput = document.getElementById('opensearch_id_hidden');
+        const idDisplayGroup = document.getElementById('property_id_display');
+        const displayedId = document.getElementById('displayed_property_id');
+
 
         // --- Utility Functions for Form Data ---
 
         function serializeForm() {
             const data = {};
             const fields = [
-                "property_id", "title", "description", "locality", "city", "state",
+                "title", "description", "locality", "city", "state",
                 "property_type", "furnishing_status", "listed_date", "available_from"
             ];
             const numberFields = [
-                "price", "bhk", "bathrooms", "area_sqft", "age_of_building", "floor_number", "no_of_toilets", "balconies"
+                "price", "bhk", "bathrooms", "area_sqft", 
+                "age_of_building", "floor_number"
             ];
             const booleanFields = ["furnished_or_unfurnished", "lift_available"];
 
             fields.forEach(f => { data[f] = document.getElementById(f).value || null; });
+            
+            // Loop for number fields, safely checking for existence and parsing
             numberFields.forEach(f => {
-                const val = document.getElementById(f).value;
-                data[f] = val ? parseFloat(val) : null;
+                const element = document.getElementById(f);
+                if (element) {
+                    const val = element.value;
+                    data[f] = val ? parseFloat(val) : null; 
+                }
             });
+            
+            // Loop for boolean fields
             booleanFields.forEach(f => {
                 const val = document.getElementById(f).value;
                 data[f] = val === "true" ? true : (val === "false" ? false : null);
@@ -132,17 +148,34 @@
             const amenitiesValue = document.getElementById("amenities").value;
             data.amenities = amenitiesValue ? amenitiesValue.split(",").map(a => a.trim()).filter(a => a) : [];
 
-            // geo_location is omitted for simplicity, but can be added here if needed
+            // Explicitly set property_id ONLY if we are in Update mode (PUT)
+            if (propertyIdParam) {
+                 // Send the OpenSearch ID back in the body for Pydantic validation (Optional[str])
+                 data.property_id = hiddenIdInput.value; 
+            }
 
-            // Remove null values for optional fields if the backend is strict about types on null
-            Object.keys(data).forEach(key => (data[key] === null) && delete data[key]);
+            // CRITICAL FIX: Ensure all null/empty values are explicitly deleted 
+            // so FastAPI/Pydantic uses defaults or treats them as None, avoiding validation errors 
+            // for types like 'Optional[int]' when an empty string is sent.
+            Object.keys(data).forEach(key => {
+                const value = data[key];
+                if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+                    delete data[key];
+                }
+            });
 
             return data;
         }
 
         function populateForm(data) {
-            const source = data._source || data; // Handle both OpenSearch response and Property model
-            document.getElementById("property_id").value = source.property_id || data._id;
+            const source = data._source || data;
+            
+            // Set the ID display and hidden input for Update mode
+            if (propertyIdParam) {
+                hiddenIdInput.value = propertyIdParam; 
+                displayedId.textContent = propertyIdParam;
+            }
+            
             document.getElementById("title").value = source.title || '';
             document.getElementById("description").value = source.description || '';
             document.getElementById("locality").value = source.locality || '';
@@ -164,10 +197,9 @@
             document.getElementById("furnished_or_unfurnished").value = source.furnished_or_unfurnished !== undefined && source.furnished_or_unfurnished !== null ? source.furnished_or_unfurnished.toString() : '';
             document.getElementById("lift_available").value = source.lift_available !== undefined && source.lift_available !== null ? source.lift_available.toString() : '';
 
-            // The property_id in the form is required by the API but shouldn't be edited on update
+            // Configuration for Update Mode visibility
             if (propertyIdParam) {
-                propertyIdInput.disabled = true; // Prevent editing the ID on update
-                document.getElementById('property_id_group').classList.add('opacity-60');
+                idDisplayGroup.classList.remove('hidden'); // Show ID on update
             }
         }
 
@@ -176,7 +208,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (propertyIdParam) {
-                // Update Mode
+                // Update Mode Setup
                 document.getElementById('page_title').textContent = 'Update Property';
                 document.getElementById('form_title').textContent = '✏️ Update Property: ' + propertyIdParam;
                 document.getElementById('submit_button').textContent = '🔄 Update Property';
@@ -197,32 +229,34 @@
                     responseMessage.textContent = `Error fetching property for update: ${error.message}`;
                     responseMessage.className = 'mt-6 p-4 bg-red-100 text-red-700 rounded-lg text-center font-medium block';
                 }
+            } else {
+                // Addition Mode: Ensure ID field is hidden and clean
+                idDisplayGroup.classList.add('hidden');
             }
         });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Check HTML5 validity before proceeding (e.g., ensuring Title, Price, Locality are filled)
+            if (!form.checkValidity()) {
+                return; 
+            }
+            
             const formData = serializeForm();
             
             const method = propertyIdParam ? 'PUT' : 'POST';
-            const id = propertyIdParam || formData.property_id;
-            const url = `${BASE_URL}/${propertyIdParam ? id : ''}`;
+            const id = propertyIdParam; 
+            const url = propertyIdParam ? `${BASE_URL}/${id}` : BASE_URL;
             
-            if (propertyIdParam) {
-                // For PUT, the ID in the URL is the OpenSearch ID, 
-                // but the Property model in the body requires the property_id field.
-                formData.property_id = id; 
-            }
-
-            if (!id && method === 'POST') {
-                 responseMessage.textContent = 'Property ID is required for a new property.';
-                 responseMessage.className = 'mt-6 p-4 bg-yellow-100 text-yellow-700 rounded-lg text-center font-medium block';
-                 return;
-            }
-
             responseMessage.textContent = 'Submitting...';
             responseMessage.className = 'mt-6 p-4 bg-blue-100 text-blue-700 rounded-lg text-center font-medium block';
             responseMessage.style.display = 'block';
+
+            console.log(`--- API Call ---`);
+            console.log(`Method: ${method}`);
+            console.log(`URL: ${url}`);
+            console.log("Payload:", JSON.stringify(formData, null, 2));
 
             try {
                 const res = await fetch(url, {
@@ -232,13 +266,16 @@
                 });
                 
                 const json = await res.json();
+                const returnedId = json.opensearch_id || id; 
 
                 if (!res.ok) {
-                     const errorDetail = json.detail || JSON.stringify(json);
+                     console.error("API Request failed. Status:", res.status);
+                     console.error("API Response Body (JSON):", json);
+                     const errorDetail = json.detail ? JSON.stringify(json.detail) : JSON.stringify(json);
                      throw new Error(`API Error (${res.status}): ${errorDetail}`);
                 }
 
-                responseMessage.textContent = `Success! Property ${id} has been ${propertyIdParam ? 'updated' : 'added'}.`;
+                responseMessage.textContent = `Success! Property ${returnedId} has been ${propertyIdParam ? 'updated' : 'added (ID auto-assigned)'}.`;
                 responseMessage.className = 'mt-6 p-4 bg-green-100 text-green-700 rounded-lg text-center font-medium block';
 
                 if (!propertyIdParam) {
