@@ -92,12 +92,13 @@
         <div id="response_message" class="mt-6 p-4 rounded-lg text-center font-medium hidden"></div>
 
         <div class="mt-8 text-center">
-            <a href="search_list.html" class="text-indigo-600 hover:text-indigo-800 font-medium">← Back to Search/List</a>
+            <a href="/static/search_list.html" class="text-indigo-600 hover:text-indigo-800 font-medium">← Back to Search/List</a>
         </div>
     </div>
 
     <script>
-        const BASE_URL = "http://localhost:8000/properties";
+        //const BASE_URL = "http://localhost:8000/api/properties";
+        const BASE_URL = window.location.origin + "/api/properties"; //when using ngrok
         const urlParams = new URLSearchParams(window.location.search);
         const propertyIdParam = urlParams.get('id');
         const form = document.getElementById('propertyForm');

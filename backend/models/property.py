@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class Property(BaseModel):
-    property_id: str
+    property_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     locality: str

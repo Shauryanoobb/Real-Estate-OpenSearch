@@ -12,7 +12,7 @@
         <h1 class="text-3xl font-extrabold text-indigo-700 mb-6 border-b pb-2">Real Estate Property Portal</h1>
 
         <div class="mb-8 flex space-x-4">
-            <a href="add_update.html" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-150">➕ Add New Property</a>
+            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-150">➕ Add New Property</a>
             <button onclick="listAllProperties()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All Properties</button>
         </div>
 
@@ -51,7 +51,8 @@
     </div>
 
     <script>
-        const BASE_URL = "http://localhost:8000/properties"; // Adjust if your prefix changes
+        //const BASE_URL = "http://localhost:8000/api/properties"; // Adjust if your prefix changes
+        const BASE_URL = window.location.origin + "/api/properties"; //when using ngrok
         const resultsContainer = document.getElementById("results");
         const statusMessage = document.getElementById("status_message");
 

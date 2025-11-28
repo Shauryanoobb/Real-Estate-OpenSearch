@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from core.opensearch_client import client #fetch the client attribute from opensearch_client.py
-from models.property import Property
+from ..core.opensearch_client import client #fetch the client attribute from opensearch_client.py
+from ..models.property import Property
 
-router = APIRouter(prefix="/properties", tags=["Properties"]) #fix this later, start with /api/properties
+router = APIRouter(prefix="/api/properties", tags=["Properties"])
 
 INDEX = "properties" #name of the index in OpenSearch
 
