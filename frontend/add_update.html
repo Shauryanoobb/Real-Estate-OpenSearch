@@ -52,8 +52,8 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- FIX: locality now spans full width on mobile (col-span-2 in a 2-col grid) -->
                     <input type="text" id="locality" required class="col-span-full md:col-span-2 p-2 border rounded-md" placeholder="Locality">
-                    <input type="text" id="city" class="p-2 border rounded-md" placeholder="City">
-                    <input type="text" id="state" class="p-2 border rounded-md" placeholder="State">
+                    <!-- <input type="text" id="city" class="p-2 border rounded-md" placeholder="City">
+                    <input type="text" id="state" class="p-2 border rounded-md" placeholder="State"> -->
                     
                     <input type="number" id="bhk" required class="p-2 border rounded-md" placeholder="BHK">
                     <input type="number" id="bathrooms" required class="p-2 border rounded-md" placeholder="Bathrooms">
@@ -122,7 +122,7 @@
         function serializeForm() {
             const data = {};
             const fields = [
-                "title", "description", "locality", "city", "state",
+                "title", "description", "locality",
                 "property_type", "furnishing_status", "listed_date", "available_from"
             ];
             const numberFields = [
@@ -183,8 +183,8 @@
             document.getElementById("title").value = source.title || '';
             document.getElementById("description").value = source.description || '';
             document.getElementById("locality").value = source.locality || '';
-            document.getElementById("city").value = source.city || '';
-            document.getElementById("state").value = source.state || '';
+            // document.getElementById("city").value = source.city || '';
+            // document.getElementById("state").value = source.state || '';
             document.getElementById("price").value = source.price || '';
             document.getElementById("bhk").value = source.bhk || '';
             document.getElementById("bathrooms").value = source.bathrooms || '';
