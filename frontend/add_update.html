@@ -48,8 +48,10 @@
 
             <div class="border p-4 rounded-xl">
                 <h2 class="text-xl font-semibold text-indigo-600 mb-4">Location & Specifications</h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <input type="text" id="locality" required class="col-span-2 p-2 border rounded-md" placeholder="Locality">
+                <!-- FIX: Changed grid-cols-1 to grid-cols-2 to enforce 50%/50% width on mobile -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- FIX: locality now spans full width on mobile (col-span-2 in a 2-col grid) -->
+                    <input type="text" id="locality" required class="col-span-full md:col-span-2 p-2 border rounded-md" placeholder="Locality">
                     <input type="text" id="city" class="p-2 border rounded-md" placeholder="City">
                     <input type="text" id="state" class="p-2 border rounded-md" placeholder="State">
                     
@@ -62,8 +64,9 @@
 
             <div class="border p-4 rounded-xl">
                 <h2 class="text-xl font-semibold text-indigo-600 mb-4">Furnishing & Dates</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="text" id="furnishing_status" class="p-2 border rounded-md" placeholder="Furnishing Status (e.g. Semi-furnished)">
+                <!-- Applying the same grid fix here for consistency -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <input type="text" id="furnishing_status" class="col-span-2 md:col-span-1 p-2 border rounded-md" placeholder="Furnishing Status (e.g. Semi-furnished)">
                     <select id="furnished_or_unfurnished" class="p-2 border rounded-md">
                         <option value="">Is Furnished?</option>
                         <option value="true">Yes</option>
@@ -77,16 +80,17 @@
                         <option value="false">No</option>
                     </select>
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-medium text-gray-700">Listed Date</label>
                         <input type="date" id="listed_date" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-medium text-gray-700">Available From</label>
                         <input type="date" id="available_from" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
 
-                    <input type="text" id="amenities" class="col-span-2 p-2 border rounded-md" placeholder="Amenities (comma separated: Gym, Pool, Park)">
+                    <!-- FIX: amenities now spans full width on mobile -->
+                    <input type="text" id="amenities" class="col-span-full p-2 border rounded-md" placeholder="Amenities (comma separated: Gym, Pool, Park)">
                 </div>
             </div>
 
