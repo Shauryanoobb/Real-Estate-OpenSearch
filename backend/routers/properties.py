@@ -1,74 +1,140 @@
-from fastapi import APIRouter, HTTPException
-from ..core.opensearch_client import client #fetch the client attribute from opensearch_client.py
-from ..models.property import Property
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from uuid import uuid4
+import logging
+from ..core.opensearch_client import client # OpenSearch client
+from ..core.database_client import get_db # Dependency for SQLAlchemy session
+from ..models.property import Property as PydanticProperty # Pydantic model for input validation
+from ..models.sql_property import SQLProperty # SQLAlchemy model for database mapping
 
 router = APIRouter(prefix="/api/properties", tags=["Properties"])
+# Configure logging at the module level
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+INDEX = "properties"
 
-INDEX = "properties" #name of the index in OpenSearch
+# --- HELPER: Maps Pydantic/SQL to OpenSearch Document Structure ---
 
-# Add new property
+def prepare_opensearch_doc(sql_model: SQLProperty):
+    """Converts the SQL model object to a dict ready for OpenSearch indexing."""
+    opensearch_doc = sql_model.to_dict() # Assumes SQLProperty has a .to_dict() method
+    
+    # Remove the Pydantic property_id field, as the SQL model's 'id' is used as the document ID
+    opensearch_doc.pop('property_id', None)
+    
+    return opensearch_doc
+
+# --- CRUD ENDPOINTS (Dual Write Implemented) ---
+
+# Add new property (CREATE)
 @router.post("/")
-def add_property(property: Property):
-    # Determine the document ID to use for OpenSearch
-    # If property.property_id is provided by the user, use it as the OpenSearch ID
-    # If not, let OpenSearch automatically generate the ID.
+def add_property(property_data: PydanticProperty, db: Session = Depends(get_db)):
     
-    body_data = property.dict(exclude_none=True)
+    # 1. PREPARE DATA and GENERATE ID
+    # Use user-provided ID if available, otherwise generate a UUID for the SQL Primary Key.
+    new_id = property_data.property_id if property_data.property_id else str(uuid4())
     
-    opensearch_id = body_data.pop("property_id", None) # Remove it from body if it exists
-
-    if opensearch_id:
-        # Case 1: User explicitly provided a property_id. Use it as the OpenSearch document ID.
-        response = client.index(index=INDEX, id=opensearch_id, body=body_data)
+    sql_data = property_data.dict(exclude_none=True)
+    sql_data["id"] = new_id # Set the SQL Primary Key
+    sql_data.pop("property_id", None) # Remove it, as 'id' is the canonical field
+    
+    sql_model = SQLProperty(**sql_data)
+    logger.info(f"Attempting to save SQL Model with ID: {new_id}")
+    logger.debug(f"SQL Data Payload: {sql_data}")
+    try:
+        # 2. SAVE TO POSTGRESQL (Source of Truth)
+        db.add(sql_model)
+        db.commit()
+        db.refresh(sql_model)
+        logger.info(f"Property added to DB with ID: {new_id}")
+        # 3. INDEX IN OPENSEARCH (Synchronization step)
+        opensearch_doc = prepare_opensearch_doc(sql_model)
+        print(f"Indexing document in OpenSearch with ID: {new_id}")
         
-    else:
-        # Case 2: No property_id provided. Let OpenSearch auto-generate the ID.
-        # When 'id' is omitted from client.index, OpenSearch assigns a unique ID.
-        response = client.index(index=INDEX, body=body_data)
+        # Use SQL ID as the OpenSearch document ID
+        response = client.index(index=INDEX, id=new_id, body=opensearch_doc)
+        
+    except Exception as e:
+        db.rollback() # CRITICAL: Rollback SQL transaction on failure
+        # Log the error here if running in production
+        raise HTTPException(status_code=500, detail=f"Database or Indexing error during creation: {e}")
     
-    # Return the OpenSearch ID for the frontend to confirm creation/use for later updates.
-    return {"result": "Property added", "opensearch_id": response["_id"]}
+    return {"result": "Property added", "opensearch_id": response["_id"], "db_id": new_id}
 
-# Update property (PUT /properties/{opensearch_id})
+# Update property (UPDATE)
 @router.put("/{opensearch_id}")
-def update_property(opensearch_id: str, property: Property):
-    # Crucially, we use opensearch_id from the URL path, not property.property_id from the body.
-    # We strip property_id from the body to avoid confusion, though Pydantic might force it.
-    body_data = property.dict(exclude_none=True)
-    body_data.pop("property_id", None) # Ensure property_id is not included in the doc update payload
+def update_property(opensearch_id: str, property_data: PydanticProperty, db: Session = Depends(get_db)):
     
-    response = client.update(index=INDEX, id=opensearch_id, body={"doc": body_data})
-    return {"result": "Property updated", "opensearch_id": opensearch_id, "response": response}
+    # 1. CHECK & FETCH POSTGRESQL
+    sql_model = db.query(SQLProperty).filter(SQLProperty.id == opensearch_id).first()
+    if not sql_model:
+        raise HTTPException(status_code=404, detail="Property not found in DB")
+        
+    update_data = property_data.dict(exclude_none=True)
+    
+    try:
+        # 2. UPDATE POSTGRESQL
+        for key, value in update_data.items():
+            if hasattr(sql_model, key) and key not in ('id', 'property_id'):
+                setattr(sql_model, key, value)
+        
+        db.commit()
+        db.refresh(sql_model)
+        
+        # 3. UPDATE OPENSEARCH (Synchronization step)
+        opensearch_doc = prepare_opensearch_doc(sql_model)
+        
+        # Use client.index (full replacement) or client.update (partial)
+        # client.index is simpler and safer for dual writes if the doc isn't huge
+        response = client.index(index=INDEX, id=opensearch_id, body=opensearch_doc) 
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database or Indexing error during update: {e}")
+    
+    return {"result": "Property updated", "opensearch_id": response["_id"]}
 
-# Get all properties
+# Delete property (DELETE)
+@router.delete("/{property_id}")
+def delete_property(property_id: str, db: Session = Depends(get_db)):
+    
+    # 1. DELETE FROM POSTGRESQL
+    sql_model = db.query(SQLProperty).filter(SQLProperty.id == property_id).first()
+    if not sql_model:
+        raise HTTPException(status_code=404, detail="Property not found in DB")
+        
+    try:
+        db.delete(sql_model)
+        db.commit()
+        
+        # 2. DELETE FROM OPENSEARCH
+        response = client.delete(index=INDEX, id=property_id, ignore=[404])
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Database or Indexing error during deletion: {e}")
+        
+    return {"result": "Property deleted", "opensearch_response": response.get('result')}
+
+# Get single property by ID (READ - Prioritize Database for Freshness)
+@router.get("/{property_id}")
+def get_property(property_id: str, db: Session = Depends(get_db)):
+    # Read from DB for absolute latest details (better than relying on OpenSearch sync lag)
+    sql_model = db.query(SQLProperty).filter(SQLProperty.id == property_id).first()
+    if not sql_model:
+        raise HTTPException(status_code=404, detail="Property not found")
+        
+    # Convert SQL model back to Pydantic-friendly dictionary structure
+    return PydanticProperty(**sql_model.to_dict())
+
+# Get all properties (READ - OpenSearch)
 @router.get("/")
 def get_all_properties(size: int = 10):
+    # Read from OpenSearch for speed and simple global query
     response = client.search(index=INDEX, body={"query": {"match_all": {}}, "size": size})
     return response
 
-# Get single property by ID
-@router.get("/{property_id}")
-def get_property(property_id: str):
-    response = client.get(index=INDEX, id=property_id, ignore=[404])
-    if not response or response.get("found") is False:
-        raise HTTPException(status_code=404, detail="Property not found")
-    return response
-
-# Update property
-# @router.put("/{property_id}")
-# def update_property(property_id: str, property: Property):
-#     response = client.update(index=INDEX, id=property_id, body={"doc": property.dict()})
-#     return {"result": "Property updated", "response": response}
-
-# Delete property
-@router.delete("/{property_id}")
-def delete_property(property_id: str):
-    response = client.delete(index=INDEX, id=property_id, ignore=[404])
-    if response.get("result") == "not_found":
-        raise HTTPException(status_code=404, detail="Property not found")
-    return {"result": "Property deleted"}
-
-#main query for searching properties
+# Search properties (READ - OpenSearch)
 @router.get("/search/")
 def search_properties(
     locality: str = None,
@@ -83,6 +149,7 @@ def search_properties(
     has_lift: bool = None,
     size: int = 10
 ):
+    # This remains unchanged, as OpenSearch is the system of choice for search.
     query = {"bool": {"must": [], "should": [], "filter": []}}
 
     if locality:
@@ -94,7 +161,8 @@ def search_properties(
         query["bool"]["should"].append({
             "match": {"description": {"query": keywords, "boost": 2}}
         })
-
+    # ... (rest of search query building logic) ...
+    
     if title_keywords:
         query["bool"]["should"].append({
             "match": {"title": {"query": title_keywords, "boost": 3}}
@@ -109,7 +177,7 @@ def search_properties(
             sqft_range["gte"] = min_sqft
         if max_sqft:
             sqft_range["lte"] = max_sqft
-        query["bool"]["filter"].append({"range": {"sqft": sqft_range}})
+        query["bool"]["filter"].append({"range": {"area_sqft": sqft_range}}) # NOTE: Changed sqft to area_sqft
 
     if min_price or max_price:
         price_range = {}
@@ -128,4 +196,3 @@ def search_properties(
     body = {"query": query, "size": size}
     response = client.search(index=INDEX, body=body)
     return response
-

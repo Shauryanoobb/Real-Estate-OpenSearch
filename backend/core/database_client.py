@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from typing import Generator
 
 # NOTE: Replace these with your actual PostgreSQL connection details and environment variables.
-SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/realestate_db" #change localhost to db, if running inside docker
+SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/realestate_db" #change localhost to db, if running inside
 
 # Create the SQLAlchemy engine. 
 # 'pool_pre_ping=True' is crucial for long-running production applications 

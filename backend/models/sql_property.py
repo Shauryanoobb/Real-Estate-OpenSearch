@@ -25,7 +25,7 @@ class SQLProperty(Base):
     city = Column(String)
     state = Column(String)
     furnishing_status = Column(String)
-    # Using ARRAY for lists (specific to PostgreSQL)
+    furnished_or_unfurnished = Column(Boolean) 
     amenities = Column(ARRAY(String)) 
     listed_date = Column(String)
     available_from = Column(String)
@@ -34,7 +34,6 @@ class SQLProperty(Base):
     floor_number = Column(Integer)
     no_of_toilets = Column(Integer)
     balconies = Column(Integer)
-    # geo_location (omitted for simplicity, would be a separate column type like Geography)
 
     def to_dict(self):
         # Convert the SQL object to a dict matching the Pydantic/OpenSearch structure
