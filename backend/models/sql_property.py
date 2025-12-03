@@ -14,7 +14,6 @@ class SQLProperty(Base):
     # Primary key, matching the OpenSearch ID
     id = Column(String, primary_key=True) 
     
-    # Required Fields
     title = Column(String)
     locality = Column(String)
     price = Column(Float)
@@ -24,8 +23,8 @@ class SQLProperty(Base):
     
     # Using SQLAlchemy's Enum type (ensure the values match the Python Enum strings)
     property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', 'Agricultural Land', 'Industrial Land', name="property_types"))
-    
-    # Optional Fields
+    listing_type = Column(Enum('SALE', 'RENT', name="listing_types"))
+    deposit = Column(Float)  # Only for RENT listings, will be NULL for SALE listings
     description = Column(String)
     facing_direction = Column(String)
     

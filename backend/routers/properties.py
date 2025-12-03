@@ -137,7 +137,7 @@ def search_properties(
     locality: str = None,
     keywords: str = None,
     title_keywords: str = None,
-    # NEW FILTERS
+    listing_type: str = None,
     property_type: str = None, 
     furnishing_status: str = None,
     total_floors: int = None,
@@ -169,7 +169,11 @@ def search_properties(
             "match": {"title": {"query": title_keywords, "boost": 3}}
         })
     
-    # --- Exact Term Filters (New & Updated) ---
+    # --- Exact Term Filters
+    
+    if listing_type:
+        # NEW: Filter by Listing Type (SALE or RENT)
+        query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
     
     if property_type:
         # Filter by Property Type (Exact match on Keyword field)

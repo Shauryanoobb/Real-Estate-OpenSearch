@@ -36,6 +36,16 @@
                 <input id="title_keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search in title">
             </div>
             
+            <!-- Listing Type -->
+            <div class="col-span-full sm:col-span-2 lg:col-span-1">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Listing Type</label>
+                <select id="listing_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">All Listings</option>
+                    <option value="SALE">For Sale</option>
+                    <option value="RENT">For Rent</option>
+                </select>
+            </div>
+            
             <!-- Property Type -->
             <div class="col-span-full sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-medium text-gray-700 mb-1">Property Type</label>
@@ -154,6 +164,7 @@
             document.getElementById('locality').value = '';
             document.getElementById('keywords').value = '';
             document.getElementById('title_keywords').value = '';
+            document.getElementById('listing_type').value = '';
             document.getElementById('property_type').value = '';
             document.getElementById('furnishing_status').value = '';
             document.getElementById('bhk').value = '';
@@ -203,6 +214,11 @@
                 const area = safeValue(p.area_sqft, '?');
                 const bathrooms = safeValue(p.bathrooms, '?');
                 
+                // Listing type badge
+                const listingBadge = p.listing_type 
+                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span>`
+                    : '';
+                
                 // Build specs array dynamically
                 const specs = [];
                 if (p.bhk) specs.push(`🛏️ ${p.bhk} BHK`);
@@ -219,6 +235,9 @@
                     tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.lift_available ? '✓' : '✗'} Lift</span>`);
                 }
                 if (p.age_of_building) tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.age_of_building}yr old</span>`);
+                if (p.listing_type === 'RENT' && p.deposit) {
+                    tags.push(`<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Deposit: ${formatPrice(p.deposit)}</span>`);
+                }
                 
                 const resultCard = `
                     <div class="p-4 sm:p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
@@ -229,7 +248,10 @@
                             </div>
                             <div class="text-left sm:text-right">
                                 <p class="text-xl sm:text-2xl font-extrabold text-green-600">${price}</p>
-                                ${p.property_type ? `<span class="inline-block mt-1 px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded">${p.property_type}</span>` : ''}
+                                <div class="flex flex-wrap gap-1 mt-1 justify-start sm:justify-end">
+                                    ${listingBadge}
+                                    ${p.property_type ? `<span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded">${p.property_type}</span>` : ''}
+                                </div>
                             </div>
                         </div>
                         
@@ -293,7 +315,7 @@
             
             const fields = [
                 "locality", "keywords", "title_keywords", 
-                "property_type", "furnishing_status",
+                "listing_type", "property_type", "furnishing_status",
                 "bhk", "total_floors",
                 "min_sqft", "max_sqft", "min_price", "max_price",
                 "has_lift"
@@ -336,6 +358,7 @@
                 
                 const hasFilters = document.getElementById('locality').value || 
                                   document.getElementById('bhk').value ||
+                                  document.getElementById('listing_type').value ||
                                   document.getElementById('property_type').value;
                 
                 if (hasFilters) {
@@ -362,6 +385,7 @@
                 
                 // Build grid items dynamically
                 const gridItems = [
+                    property.listing_type ? `<div><span class="font-semibold">Listing Type:</span> <span class="px-2 py-1 ${property.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} rounded text-sm">${property.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span></div>` : '',
                     property.property_type ? `<div><span class="font-semibold">Type:</span> ${property.property_type}</div>` : '',
                     property.locality ? `<div><span class="font-semibold">Locality:</span> ${property.locality}</div>` : '',
                     property.bhk ? `<div><span class="font-semibold">BHK:</span> ${property.bhk}</div>` : '',
@@ -372,6 +396,7 @@
                     property.furnishing_status ? `<div><span class="font-semibold">Furnishing:</span> ${property.furnishing_status}</div>` : '',
                     (property.lift_available !== null && property.lift_available !== undefined) ? `<div><span class="font-semibold">Lift:</span> ${property.lift_available ? 'Yes' : 'No'}</div>` : '',
                     property.age_of_building ? `<div><span class="font-semibold">Age:</span> ${property.age_of_building} years</div>` : '',
+                    (property.listing_type === 'RENT' && property.deposit) ? `<div><span class="font-semibold">Deposit:</span> ${formatPrice(property.deposit)}</div>` : '',
                     property.listed_date ? `<div><span class="font-semibold">Listed:</span> ${new Date(property.listed_date).toLocaleDateString()}</div>` : ''
                 ].filter(item => item !== '');
                 

@@ -14,6 +14,11 @@ class PropertyType(str, Enum):
     AGRICULTURAL_LAND = "Agricultural Land"
     INDUSTRIAL_LAND = "Industrial Land"
 
+class ListingType(str, Enum):
+    """Enumeration for listing type."""
+    SALE = "SALE"
+    RENT = "RENT"
+
 class FurnishingStatus(str, Enum):
     """Enumeration for property furnishing level."""
     FURNISHED = "FURNISHED"
@@ -35,7 +40,6 @@ class AdditionalRoom(str, Enum):
     POOJA_ROOM = "Pooja Room"
 
 # --- Main Property Model ---
-# kept everything optional right now, confirm datatypes and decide enums
 class Property(BaseModel):
     """The main property listing model, including embedded customer/seller details."""
     property_id: Optional[str] = None
@@ -43,11 +47,13 @@ class Property(BaseModel):
     
     # Using Enums for validation and limited choices
     property_type: Optional[PropertyType] = None
+    listing_type: Optional[ListingType] = None
     furnishing_status: Optional[FurnishingStatus] = None
     
     description: Optional[str] = None
     locality: Optional[str] = None
     price: Optional[float] = None
+    deposit: Optional[float] = None  # Only for RENT listings
     bhk: Optional[int] = None
     facing_direction: Optional[str] = None
     area_sqft: Optional[int] = None
@@ -67,7 +73,6 @@ class Property(BaseModel):
     total_floors: Optional[int] = None
 
     # --- Flattened Customer/Seller Details (One-to-One) ---
-    # These fields are now direct properties of the Property table/document.
     seller_name: Optional[str] = None
     seller_email: Optional[str] = None
     seller_phone: Optional[str] = None

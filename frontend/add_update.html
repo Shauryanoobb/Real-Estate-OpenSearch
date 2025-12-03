@@ -6,37 +6,37 @@
     <title id="page_title">Add New Property</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-4 sm:p-6">
+<body class="bg-gray-50 p-6">
 
-    <div class="max-w-4xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
-        <h1 id="form_title" class="text-2xl sm:text-3xl font-extrabold text-green-700 mb-4 sm:mb-6 border-b pb-2">➕ Add New Property</h1>
-        <p class="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">Fill in the details to list or update the property information.</p>
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 id="form_title" class="text-3xl font-extrabold text-green-700 mb-6 border-b pb-2">➕ Add New Property</h1>
+        <p class="text-gray-600 mb-6">Fill in the details to list or update the property information (All fields optional).</p>
 
-        <form id="propertyForm" class="space-y-4 sm:space-y-6">
+        <form id="propertyForm" class="space-y-6">
             
             <!-- Hidden field to store the OpenSearch ID when updating (the document ID) -->
             <input type="hidden" id="opensearch_id_hidden">
             
             <!-- BASIC INFORMATION -->
-            <div class="border p-3 sm:p-4 rounded-xl">
-                <h2 class="text-lg sm:text-xl font-semibold text-indigo-600 mb-3 sm:mb-4">Basic Information</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div class="border p-4 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Basic Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     
                     <!-- ID DISPLAY: Shown only when in Update mode (for reference) -->
-                    <div class="col-span-full hidden mb-4" id="property_id_display"> 
+                    <div class="col-span-2 hidden mb-4" id="property_id_display"> 
                         <label class="block text-sm font-medium text-gray-700">OpenSearch ID (Cannot be changed)</label>
-                        <p id="displayed_property_id" class="p-2 bg-gray-100 border border-gray-300 rounded-md font-mono text-sm break-all"></p>
+                        <p id="displayed_property_id" class="p-2 bg-gray-100 border border-gray-300 rounded-md font-mono text-sm"></p>
                     </div>
                     
-                    <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input type="text" id="title" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Title</label>
+                        <input type="text" id="title" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
                     
                     <!-- PROPERTY TYPE (ENUM) -->
-                    <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
-                        <select id="property_type" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Property Type</label>
+                        <select id="property_type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                             <option value="">Select Type</option>
                             <option value="Flat">Flat</option>
                             <option value="Bungalow">Bungalow</option>
@@ -48,95 +48,80 @@
                         </select>
                     </div>
 
-                    <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-                        <input type="number" id="price" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                    <!-- NEW: LISTING TYPE (ENUM) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Listing For</label>
+                        <select id="listing_type" onchange="toggleDepositField()" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                            <option value="">Select Listing Type</option>
+                            <option value="SALE">Sale</option>
+                            <option value="RENT">Rent</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Price / Rent (₹)</label>
+                        <input type="number" id="price" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                    </div>
+
+                    <!-- NEW: DEPOSIT FIELD (CONDITIONAL) -->
+                    <div id="deposit_group" class="hidden col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Deposit Amount (₹)</label>
+                        <input type="number" id="deposit" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
                 </div>
-                <div class="mt-3 sm:mt-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea id="description" rows="3" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base"></textarea>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="description" rows="3" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"></textarea>
                 </div>
             </div>
 
             <!-- LOCATION & SPECIFICATIONS -->
-            <div class="border p-3 sm:p-4 rounded-xl">
-                <h2 class="text-lg sm:text-xl font-semibold text-indigo-600 mb-3 sm:mb-4">Location & Specifications</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                    <div class="col-span-full sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Locality</label>
-                        <input type="text" id="locality" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Locality">
-                    </div>
+            <div class="border p-4 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Location & Specifications</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <input type="text" id="locality" class="col-span-full md:col-span-2 p-2 border rounded-md" placeholder="Locality">
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">BHK</label>
-                        <input type="number" id="bhk" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="BHK">
-                    </div>
+                    <input type="number" id="bhk" class="p-2 border rounded-md" placeholder="BHK">
+                    <input type="number" id="bathrooms" class="p-2 border rounded-md" placeholder="Bathrooms">
+                    <input type="number" id="area_sqft" class="p-2 border rounded-md" placeholder="Area (sqft)">
+                    <input type="text" id="facing_direction" class="p-2 border rounded-md" placeholder="Facing Direction">
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
-                        <input type="number" id="bathrooms" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Bathrooms">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Area (sqft)</label>
-                        <input type="number" id="area_sqft" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Area">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Facing Direction</label>
-                        <input type="text" id="facing_direction" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="e.g., North">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Floor Number</label>
-                        <input type="number" id="floor_number" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Floor">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Floors</label>
-                        <input type="number" id="total_floors" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Total">
-                    </div>
+                    <input type="number" id="floor_number" class="p-2 border rounded-md" placeholder="Floor Number">
+                    <input type="number" id="total_floors" class="p-2 border rounded-md" placeholder="Total Floors">
                     
                     <!-- ADDITIONAL ROOMS (Multi-Select) -->
-                    <div class="col-span-full sm:col-span-2 lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Additional Rooms</label>
-                        <p class="text-xs text-gray-500 mb-2">Hold Ctrl/Cmd and click to select multiple</p>
-                        <div class="border border-gray-300 rounded-md p-2 bg-white max-h-32 overflow-y-auto">
-                            <select id="additional_rooms" multiple class="w-full border-none focus:ring-0 text-sm" size="4">
-                                <option value="Store Room">Store Room</option>
-                                <option value="Study Room">Study Room</option>
-                                <option value="Servant Room">Servant Room</option>
-                                <option value="Pooja Room">Pooja Room</option>
-                            </select>
-                        </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-gray-700">Additional Rooms (Ctrl/Cmd + Click)</label>
+                        <select id="additional_rooms" multiple class="w-full p-2 border rounded-md h-24" size="4">
+                            <option value="Store Room">Store Room</option>
+                            <option value="Study Room">Study Room</option>
+                            <option value="Servant Room">Servant Room</option>
+                            <option value="Pooja Room">Pooja Room</option>
+                        </select>
                     </div>
 
                     <!-- OVERLOOKING (Multi-Select) -->
-                    <div class="col-span-full sm:col-span-2 lg:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Overlooking View</label>
-                        <p class="text-xs text-gray-500 mb-2">Hold Ctrl/Cmd and click to select multiple</p>
-                        <div class="border border-gray-300 rounded-md p-2 bg-white max-h-32 overflow-y-auto">
-                            <select id="overlooking" multiple class="w-full border-none focus:ring-0 text-sm" size="4">
-                                <option value="Park">Park View</option>
-                                <option value="Main Road">Main Road</option>
-                                <option value="Garden">Garden View</option>
-                                <option value="Pool">Pool View</option>
-                            </select>
-                        </div>
+                    <div class="col-span-2">
+                         <label class="block text-sm font-medium text-gray-700">Overlooking View (Ctrl/Cmd + Click)</label>
+                        <select id="overlooking" multiple class="w-full p-2 border rounded-md h-24" size="4">
+                            <option value="Park">Park View</option>
+                            <option value="Main Road">Main Road</option>
+                            <option value="Garden">Garden View</option>
+                            <option value="Pool">Pool View</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             <!-- FURNISHING & DATES -->
-            <div class="border p-3 sm:p-4 rounded-xl">
-                <h2 class="text-lg sm:text-xl font-semibold text-indigo-600 mb-3 sm:mb-4">Furnishing & Dates</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="border p-4 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Furnishing & Dates</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     
                     <!-- FURNISHING STATUS (ENUM) -->
-                    <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Furnishing Status</label>
-                        <select id="furnishing_status" class="block w-full p-2 border rounded-md text-sm sm:text-base">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">Furnishing Status</label>
+                        <select id="furnishing_status" class="w-full p-2 border rounded-md">
                             <option value="">Select Status</option>
                             <option value="FURNISHED">FURNISHED</option>
                             <option value="SEMI_FURNISHED">SEMI-FURNISHED</option>
@@ -144,82 +129,47 @@
                         </select>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Building Age (years)</label>
-                        <input type="number" id="age_of_building" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Age">
-                    </div>
+                    <input type="number" id="age_of_building" class="p-2 border rounded-md" placeholder="Age of Building (years)">
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Lift Available?</label>
-                        <select id="lift_available" class="block w-full p-2 border rounded-md text-sm sm:text-base">
-                            <option value="">Select</option>
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
+                    <select id="lift_available" class="p-2 border rounded-md">
+                        <option value="">Lift Available?</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
 
-                    <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Listed Date</label>
-                        <input type="date" id="listed_date" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
-                    </div>
+                    <input type="text" id="amenities" class="col-span-full p-2 border rounded-md" placeholder="Amenities (comma separated: Gym, Pool, Park)">
+                    <input type="text" id="images" class="col-span-full p-2 border rounded-md" placeholder="Image URLs (comma separated)">
 
-                    <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
-                        <input type="text" id="amenities" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Gym, Pool, Park (comma separated)">
+                    <div class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">Listed Date</label>
+                        <input type="date" id="listed_date" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
-                    
-                    <!-- <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Image URLs</label>
-                        <input type="text" id="images" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="https://example.com/image1.jpg, https://... (comma separated)">
-                    </div> -->
                 </div>
             </div>
             
             <!-- SELLER DETAILS -->
-            <div class="border p-3 sm:p-4 rounded-xl">
-                <h2 class="text-lg sm:text-xl font-semibold text-indigo-600 mb-3 sm:mb-4">Seller Details</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Seller Name</label>
-                        <input type="text" id="seller_name" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Name">
-                    </div>
+            <div class="border p-4 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Seller Details (Source of Truth)</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="seller_name" class="p-2 border rounded-md" placeholder="Seller Name">
+                    <input type="email" id="seller_email" class="p-2 border rounded-md" placeholder="Seller Email">
+                    <input type="tel" id="seller_phone" class="p-2 border rounded-md" placeholder="Seller Phone">
+                    <input type="text" id="seller_referred_by" class="p-2 border rounded-md" placeholder="Referred By">
                     
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Seller Email</label>
-                        <input type="email" id="seller_email" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="email@example.com">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Seller Phone</label>
-                        <input type="tel" id="seller_phone" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Phone">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Referred By</label>
-                        <input type="text" id="seller_referred_by" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Referrer">
-                    </div>
-                    
-                    <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Seller Address</label>
-                        <input type="text" id="seller_address" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Address">
-                    </div>
-                    
-                    <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                        <textarea id="seller_additional_info" rows="2" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Any additional information"></textarea>
-                    </div>
+                    <input type="text" id="seller_address" class="col-span-full p-2 border rounded-md" placeholder="Seller Address">
+                    <textarea id="seller_additional_info" rows="2" class="col-span-full p-2 border rounded-md" placeholder="Seller Additional Notes"></textarea>
                 </div>
             </div>
 
-            <button type="submit" id="submit_button" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold text-base sm:text-lg hover:bg-green-700 transition duration-150">
+            <button type="submit" id="submit_button" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold text-lg hover:bg-green-700 transition duration-150">
                 ✨ Add Property
             </button>
         </form>
 
-        <div id="response_message" class="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg text-center font-medium hidden text-sm sm:text-base"></div>
+        <div id="response_message" class="mt-6 p-4 rounded-lg text-center font-medium hidden"></div>
 
-        <div class="mt-6 sm:mt-8 text-center">
-            <a href="/static/search_list.html" class="text-indigo-600 hover:text-indigo-800 font-medium text-sm sm:text-base">← Back to Search/List</a>
+        <div class="mt-8 text-center">
+            <a href="/static/search_list.html" class="text-indigo-600 hover:text-indigo-800 font-medium">← Back to Search/List</a>
         </div>
     </div>
 
@@ -232,7 +182,19 @@
         const hiddenIdInput = document.getElementById('opensearch_id_hidden');
         const idDisplayGroup = document.getElementById('property_id_display');
         const displayedId = document.getElementById('displayed_property_id');
+        const depositGroup = document.getElementById('deposit_group'); 
 
+        // Helper function to show/hide the Deposit field based on Listing Type
+        function toggleDepositField() {
+            const listingType = document.getElementById('listing_type').value;
+            if (listingType === 'RENT') {
+                depositGroup.classList.remove('hidden');
+            } else {
+                depositGroup.classList.add('hidden');
+                document.getElementById('deposit').value = ''; // Clear value if hidden
+            }
+        }
+        
         // Helper function to get selected options from a multiple select element
         function getMultiSelectValues(id) {
             const select = document.getElementById(id);
@@ -244,17 +206,20 @@
             const data = {};
             const fields = [
                 "title", "description", "locality", "facing_direction",
-                "property_type", "furnishing_status", "listed_date",
+                "property_type", "listing_type", "furnishing_status", "listed_date",
                 // Seller Fields
                 "seller_name", "seller_email", "seller_phone", "seller_address", "seller_referred_by", "seller_additional_info"
             ];
             const numberFields = [
-                "price", "bhk", "bathrooms", "area_sqft", 
+                "price", "deposit", "bhk", "bathrooms", "area_sqft",
                 "age_of_building", "floor_number", "total_floors"
             ];
             const booleanFields = ["lift_available"];
 
-            fields.forEach(f => { data[f] = document.getElementById(f).value || null; });
+            fields.forEach(f => { 
+                const element = document.getElementById(f);
+                if (element) data[f] = element.value || null; 
+            });
             
             // Loop for number fields, safely checking for existence and parsing
             numberFields.forEach(f => {
@@ -275,8 +240,8 @@
             const amenitiesValue = document.getElementById("amenities").value;
             data.amenities = amenitiesValue ? amenitiesValue.split(",").map(a => a.trim()).filter(a => a) : [];
             
-            //const imagesValue = document.getElementById("images").value;
-            //data.images = imagesValue ? imagesValue.split(",").map(a => a.trim()).filter(a => a) : [];
+            const imagesValue = document.getElementById("images").value;
+            data.images = imagesValue ? imagesValue.split(",").map(a => a.trim()).filter(a => a) : [];
 
             // Handle Multi-Select Enum Fields
             data.overlooking = getMultiSelectValues('overlooking');
@@ -291,7 +256,8 @@
             // CRITICAL FIX: Ensure all null/empty values are explicitly deleted 
             Object.keys(data).forEach(key => {
                 const value = data[key];
-                if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
+                // Check if deposit is being passed, if it's 0 it should remain, but if it's null/empty string/empty array delete it
+                if (key !== 'deposit' && (value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
                     delete data[key];
                 }
             });
@@ -321,6 +287,11 @@
             document.getElementById("title").value = source.title || '';
             document.getElementById("description").value = source.description || '';
             document.getElementById("locality").value = source.locality || '';
+            
+            // NEW FIELDS
+            document.getElementById("listing_type").value = source.listing_type || '';
+            document.getElementById("deposit").value = source.deposit || ''; // Populate deposit if it exists
+
             document.getElementById("price").value = source.price || '';
             document.getElementById("bhk").value = source.bhk || '';
             document.getElementById("bathrooms").value = source.bathrooms || '';
@@ -348,12 +319,14 @@
 
             // Array Fields (Single Input)
             document.getElementById("amenities").value = Array.isArray(source.amenities) ? source.amenities.join(', ') : '';
-            //document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
+            document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
 
             // Array/Enum Multi-Selects
             setMultiSelectValues('overlooking', source.overlooking);
             setMultiSelectValues('additional_rooms', source.additional_rooms);
 
+            // CRITICAL: Call toggleDepositField AFTER setting listing_type to ensure visibility is correct
+            toggleDepositField(); 
 
             // Configuration for Update Mode visibility
             if (propertyIdParam) {
@@ -365,6 +338,9 @@
         // --- Main Logic (Submit Handler remains unchanged) ---
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize visibility in case we are in Add mode or Sale mode
+            toggleDepositField(); 
+
             if (propertyIdParam) {
                 // Update Mode Setup
                 document.getElementById('page_title').textContent = 'Update Property';
@@ -397,6 +373,8 @@
             e.preventDefault();
             
             // Check HTML5 validity before proceeding 
+            // NOTE: form.checkValidity() will now only check fields with the 'required' attribute, 
+            // which are currently none in the current HTML.
             if (!form.checkValidity()) {
                 return; 
             }
