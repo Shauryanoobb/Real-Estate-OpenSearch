@@ -29,26 +29,28 @@
                     </div>
                     
                     <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                        <input type="text" id="title" required class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                        <input type="text" id="title" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
                     </div>
                     
                     <!-- PROPERTY TYPE (ENUM) -->
                     <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Property Type *</label>
-                        <select id="property_type" required class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+                        <select id="property_type" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
                             <option value="">Select Type</option>
                             <option value="Flat">Flat</option>
                             <option value="Bungalow">Bungalow</option>
                             <option value="Plot">Plot</option>
                             <option value="Office">Office</option>
                             <option value="Shop">Shop</option>
+                            <option value="Agricultural Land">Agricultural Land</option>
+                            <option value="Industrial Land">Industrial Land</option>
                         </select>
                     </div>
 
                     <div class="col-span-full sm:col-span-1">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
-                        <input type="number" id="price" required class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+                        <input type="number" id="price" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
                     </div>
                 </div>
                 <div class="mt-3 sm:mt-4">
@@ -62,23 +64,23 @@
                 <h2 class="text-lg sm:text-xl font-semibold text-indigo-600 mb-3 sm:mb-4">Location & Specifications</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                     <div class="col-span-full sm:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Locality *</label>
-                        <input type="text" id="locality" required class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Locality">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Locality</label>
+                        <input type="text" id="locality" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Locality">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">BHK *</label>
-                        <input type="number" id="bhk" required class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="BHK">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">BHK</label>
+                        <input type="number" id="bhk" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="BHK">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Bathrooms *</label>
-                        <input type="number" id="bathrooms" required class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Bathrooms">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
+                        <input type="number" id="bathrooms" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Bathrooms">
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Area (sqft) *</label>
-                        <input type="number" id="area_sqft" required class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Area">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Area (sqft)</label>
+                        <input type="number" id="area_sqft" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Area">
                     </div>
                     
                     <div>
@@ -166,10 +168,10 @@
                         <input type="text" id="amenities" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Gym, Pool, Park (comma separated)">
                     </div>
                     
-                    <div class="col-span-full">
+                    <!-- <div class="col-span-full">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Image URLs</label>
                         <input type="text" id="images" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="https://example.com/image1.jpg, https://... (comma separated)">
-                    </div>
+                    </div> -->
                 </div>
             </div>
             
@@ -273,8 +275,8 @@
             const amenitiesValue = document.getElementById("amenities").value;
             data.amenities = amenitiesValue ? amenitiesValue.split(",").map(a => a.trim()).filter(a => a) : [];
             
-            const imagesValue = document.getElementById("images").value;
-            data.images = imagesValue ? imagesValue.split(",").map(a => a.trim()).filter(a => a) : [];
+            //const imagesValue = document.getElementById("images").value;
+            //data.images = imagesValue ? imagesValue.split(",").map(a => a.trim()).filter(a => a) : [];
 
             // Handle Multi-Select Enum Fields
             data.overlooking = getMultiSelectValues('overlooking');
@@ -346,7 +348,7 @@
 
             // Array Fields (Single Input)
             document.getElementById("amenities").value = Array.isArray(source.amenities) ? source.amenities.join(', ') : '';
-            document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
+            //document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
 
             // Array/Enum Multi-Selects
             setMultiSelectValues('overlooking', source.overlooking);

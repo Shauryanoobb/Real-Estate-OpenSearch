@@ -3,7 +3,8 @@ from .database_client import engine, SQLALCHEMY_DATABASE_URL
 from ..models.sql_property import Base # Import the declarative base
 
 #python -m backend.core.initialise_db to run this file directly
-
+#on changin an enum , you will have to manually drop that enum datatypoe like this DROP TYPE property_types;
+#hence setting up good migration practice needed like alembic
 def initialize_db():
     """Checks if the DB exists, creates it if necessary, and ensures all tables are created."""
     try:

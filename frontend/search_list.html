@@ -46,6 +46,8 @@
                     <option value="Plot">Plot</option>
                     <option value="Office">Office</option>
                     <option value="Shop">Shop</option>
+                    <option value="Agricultural Land">Agricultural Land</option>
+                    <option value="Industrial Land">Industrial Land</option>
                 </select>
             </div>
 
@@ -172,6 +174,10 @@
             return `₹${price.toLocaleString('en-IN')}`;
         }
 
+        function safeValue(value, defaultValue = 'N/A') {
+            return (value !== null && value !== undefined && value !== '') ? value : defaultValue;
+        }
+
         function renderResults(data) {
             resultsContainer.innerHTML = '';
             statusMessage.style.display = 'none';
@@ -189,41 +195,65 @@
                 const p = hit._source;
                 const propertyId = hit._id;
                 
+                // Safe access to property fields
+                const title = safeValue(p.title, 'Untitled Property');
+                const price = p.price ? formatPrice(p.price) : 'Price not specified';
+                const locality = safeValue(p.locality, 'Location not specified');
+                const bhk = safeValue(p.bhk, '?');
+                const area = safeValue(p.area_sqft, '?');
+                const bathrooms = safeValue(p.bathrooms, '?');
+                
+                // Build specs array dynamically
+                const specs = [];
+                if (p.bhk) specs.push(`🛏️ ${p.bhk} BHK`);
+                if (p.area_sqft) specs.push(`📐 ${p.area_sqft} sqft`);
+                if (p.bathrooms) specs.push(`🛁 ${p.bathrooms} Bath${p.bathrooms > 1 ? 's' : ''}`);
+                if (p.floor_number) {
+                    specs.push(`🏢 Floor ${p.floor_number}${p.total_floors ? `/${p.total_floors}` : ''}`);
+                }
+                
+                // Build tags array dynamically
+                const tags = [];
+                if (p.furnishing_status) tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.furnishing_status}</span>`);
+                if (p.lift_available !== null && p.lift_available !== undefined) {
+                    tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.lift_available ? '✓' : '✗'} Lift</span>`);
+                }
+                if (p.age_of_building) tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.age_of_building}yr old</span>`);
+                
                 const resultCard = `
                     <div class="p-4 sm:p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
                             <div class="flex-1">
-                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800 break-words">${p.title}</h3>
+                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800 break-words">${title}</h3>
                                 <p class="text-xs sm:text-sm text-gray-500 mt-1">ID: ${propertyId}</p>
                             </div>
                             <div class="text-left sm:text-right">
-                                <p class="text-xl sm:text-2xl font-extrabold text-green-600">${formatPrice(p.price)}</p>
+                                <p class="text-xl sm:text-2xl font-extrabold text-green-600">${price}</p>
                                 ${p.property_type ? `<span class="inline-block mt-1 px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded">${p.property_type}</span>` : ''}
                             </div>
                         </div>
                         
                         <div class="space-y-2 text-sm sm:text-base">
-                            <p class="text-gray-700">📍 <strong>${p.locality}</strong></p>
-                            <div class="flex flex-wrap gap-3 text-gray-700">
-                                <span>🛏️ ${p.bhk} BHK</span>
-                                <span>📐 ${p.area_sqft} sqft</span>
-                                <span>🛁 ${p.bathrooms} Bath${p.bathrooms > 1 ? 's' : ''}</span>
-                                ${p.floor_number ? `<span>🏢 Floor ${p.floor_number}${p.total_floors ? `/${p.total_floors}` : ''}</span>` : ''}
-                            </div>
+                            <p class="text-gray-700">📍 <strong>${locality}</strong></p>
+                            ${specs.length > 0 ? `
+                                <div class="flex flex-wrap gap-3 text-gray-700">
+                                    ${specs.join('')}
+                                </div>
+                            ` : '<p class="text-gray-500 text-sm">Specifications not available</p>'}
                             
                             ${p.facing_direction ? `<p class="text-gray-600 text-sm">🧭 Facing: ${p.facing_direction}</p>` : ''}
                             
-                            <div class="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
-                                ${p.furnishing_status ? `<span class="px-2 py-1 bg-gray-100 rounded">${p.furnishing_status}</span>` : ''}
-                                ${p.lift_available !== null ? `<span class="px-2 py-1 bg-gray-100 rounded">${p.lift_available ? '✓' : '✗'} Lift</span>` : ''}
-                                ${p.age_of_building ? `<span class="px-2 py-1 bg-gray-100 rounded">${p.age_of_building}yr old</span>` : ''}
-                            </div>
+                            ${tags.length > 0 ? `
+                                <div class="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
+                                    ${tags.join('')}
+                                </div>
+                            ` : ''}
                             
-                            ${p.overlooking && p.overlooking.length > 0 ? `
+                            ${p.overlooking && Array.isArray(p.overlooking) && p.overlooking.length > 0 ? `
                                 <p class="text-sm text-gray-600">🌳 Views: ${p.overlooking.join(', ')}</p>
                             ` : ''}
                             
-                            ${p.additional_rooms && p.additional_rooms.length > 0 ? `
+                            ${p.additional_rooms && Array.isArray(p.additional_rooms) && p.additional_rooms.length > 0 ? `
                                 <p class="text-sm text-gray-600">➕ Extra: ${p.additional_rooms.join(', ')}</p>
                             ` : ''}
                             
@@ -325,26 +355,51 @@
                 if (!res.ok) throw new Error('Failed to fetch property details');
                 const property = await res.json();
                 
+                // Helper to safely display values
+                const display = (value, fallback = 'Not specified') => {
+                    return (value !== null && value !== undefined && value !== '') ? value : fallback;
+                };
+                
+                // Build grid items dynamically
+                const gridItems = [
+                    property.property_type ? `<div><span class="font-semibold">Type:</span> ${property.property_type}</div>` : '',
+                    property.locality ? `<div><span class="font-semibold">Locality:</span> ${property.locality}</div>` : '',
+                    property.bhk ? `<div><span class="font-semibold">BHK:</span> ${property.bhk}</div>` : '',
+                    property.bathrooms ? `<div><span class="font-semibold">Bathrooms:</span> ${property.bathrooms}</div>` : '',
+                    property.area_sqft ? `<div><span class="font-semibold">Area:</span> ${property.area_sqft} sqft</div>` : '',
+                    property.facing_direction ? `<div><span class="font-semibold">Facing:</span> ${property.facing_direction}</div>` : '',
+                    (property.floor_number || property.total_floors) ? `<div><span class="font-semibold">Floor:</span> ${display(property.floor_number, '?')}${property.total_floors ? ` / ${property.total_floors}` : ''}</div>` : '',
+                    property.furnishing_status ? `<div><span class="font-semibold">Furnishing:</span> ${property.furnishing_status}</div>` : '',
+                    (property.lift_available !== null && property.lift_available !== undefined) ? `<div><span class="font-semibold">Lift:</span> ${property.lift_available ? 'Yes' : 'No'}</div>` : '',
+                    property.age_of_building ? `<div><span class="font-semibold">Age:</span> ${property.age_of_building} years</div>` : '',
+                    property.listed_date ? `<div><span class="font-semibold">Listed:</span> ${new Date(property.listed_date).toLocaleDateString()}</div>` : ''
+                ].filter(item => item !== '');
+                
+                // Build seller info dynamically
+                const hasSellerInfo = property.seller_name || property.seller_email || property.seller_phone || 
+                                     property.seller_address || property.seller_referred_by || property.seller_additional_info;
+                
+                const sellerItems = [
+                    property.seller_name ? `<div><span class="font-semibold">Name:</span> ${property.seller_name}</div>` : '',
+                    property.seller_email ? `<div><span class="font-semibold">Email:</span> <a href="mailto:${property.seller_email}" class="text-blue-600 hover:underline">${property.seller_email}</a></div>` : '',
+                    property.seller_phone ? `<div><span class="font-semibold">Phone:</span> <a href="tel:${property.seller_phone}" class="text-blue-600 hover:underline">${property.seller_phone}</a></div>` : '',
+                    property.seller_referred_by ? `<div><span class="font-semibold">Referred By:</span> ${property.seller_referred_by}</div>` : '',
+                    property.seller_address ? `<div class="col-span-full"><span class="font-semibold">Address:</span> ${property.seller_address}</div>` : '',
+                    property.seller_additional_info ? `<div class="col-span-full"><span class="font-semibold">Notes:</span> ${property.seller_additional_info}</div>` : ''
+                ].filter(item => item !== '');
+                
                 modalContent.innerHTML = `
                     <div class="space-y-4 sm:space-y-6">
                         <div>
-                            <h3 class="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">${property.title}</h3>
-                            <p class="text-2xl sm:text-3xl font-extrabold text-green-600">${formatPrice(property.price)}</p>
+                            <h3 class="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">${display(property.title, 'Untitled Property')}</h3>
+                            <p class="text-2xl sm:text-3xl font-extrabold text-green-600">${property.price ? formatPrice(property.price) : 'Price not specified'}</p>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                            <div><span class="font-semibold">Type:</span> ${property.property_type || 'N/A'}</div>
-                            <div><span class="font-semibold">Locality:</span> ${property.locality}</div>
-                            <div><span class="font-semibold">BHK:</span> ${property.bhk}</div>
-                            <div><span class="font-semibold">Bathrooms:</span> ${property.bathrooms}</div>
-                            <div><span class="font-semibold">Area:</span> ${property.area_sqft} sqft</div>
-                            <div><span class="font-semibold">Facing:</span> ${property.facing_direction || 'N/A'}</div>
-                            <div><span class="font-semibold">Floor:</span> ${property.floor_number || 'N/A'}${property.total_floors ? ` / ${property.total_floors}` : ''}</div>
-                            <div><span class="font-semibold">Furnishing:</span> ${property.furnishing_status || 'N/A'}</div>
-                            <div><span class="font-semibold">Lift:</span> ${property.lift_available ? 'Yes' : 'No'}</div>
-                            <div><span class="font-semibold">Age:</span> ${property.age_of_building ? `${property.age_of_building} years` : 'N/A'}</div>
-                            <div><span class="font-semibold">Listed:</span> ${property.listed_date ? new Date(property.listed_date).toLocaleDateString() : 'N/A'}</div>
-                        </div>
+                        ${gridItems.length > 0 ? `
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                ${gridItems.join('')}
+                            </div>
+                        ` : '<p class="text-gray-500 p-4 bg-gray-50 rounded-lg">Property details not available</p>'}
                         
                         ${property.description ? `
                             <div>
@@ -353,7 +408,7 @@
                             </div>
                         ` : ''}
                         
-                        ${property.overlooking && property.overlooking.length > 0 ? `
+                        ${property.overlooking && Array.isArray(property.overlooking) && property.overlooking.length > 0 ? `
                             <div>
                                 <h4 class="font-semibold text-lg mb-2">Overlooking Views</h4>
                                 <div class="flex flex-wrap gap-2">
@@ -362,7 +417,7 @@
                             </div>
                         ` : ''}
                         
-                        ${property.additional_rooms && property.additional_rooms.length > 0 ? `
+                        ${property.additional_rooms && Array.isArray(property.additional_rooms) && property.additional_rooms.length > 0 ? `
                             <div>
                                 <h4 class="font-semibold text-lg mb-2">Additional Rooms</h4>
                                 <div class="flex flex-wrap gap-2">
@@ -371,7 +426,7 @@
                             </div>
                         ` : ''}
                         
-                        ${property.amenities && property.amenities.length > 0 ? `
+                        ${property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0 ? `
                             <div>
                                 <h4 class="font-semibold text-lg mb-2">Amenities</h4>
                                 <div class="flex flex-wrap gap-2">
@@ -380,17 +435,14 @@
                             </div>
                         ` : ''}
                         
-                        ${property.seller_name || property.seller_email || property.seller_phone ? `
+                        ${hasSellerInfo ? `
                             <div class="border-t pt-4">
                                 <h4 class="font-semibold text-lg mb-3">Seller Information</h4>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                    ${property.seller_name ? `<div><span class="font-semibold">Name:</span> ${property.seller_name}</div>` : ''}
-                                    ${property.seller_email ? `<div><span class="font-semibold">Email:</span> <a href="mailto:${property.seller_email}" class="text-blue-600 hover:underline">${property.seller_email}</a></div>` : ''}
-                                    ${property.seller_phone ? `<div><span class="font-semibold">Phone:</span> <a href="tel:${property.seller_phone}" class="text-blue-600 hover:underline">${property.seller_phone}</a></div>` : ''}
-                                    ${property.seller_referred_by ? `<div><span class="font-semibold">Referred By:</span> ${property.seller_referred_by}</div>` : ''}
-                                    ${property.seller_address ? `<div class="col-span-full"><span class="font-semibold">Address:</span> ${property.seller_address}</div>` : ''}
-                                    ${property.seller_additional_info ? `<div class="col-span-full"><span class="font-semibold">Notes:</span> ${property.seller_additional_info}</div>` : ''}
-                                </div>
+                                ${sellerItems.length > 0 ? `
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                        ${sellerItems.join('')}
+                                    </div>
+                                ` : '<p class="text-gray-500 text-sm">No seller information available</p>'}
                             </div>
                         ` : ''}
                         

@@ -11,6 +11,8 @@ class PropertyType(str, Enum):
     PLOT = "Plot"
     OFFICE = "Office"
     SHOP = "Shop"
+    AGRICULTURAL_LAND = "Agricultural Land"
+    INDUSTRIAL_LAND = "Industrial Land"
 
 class FurnishingStatus(str, Enum):
     """Enumeration for property furnishing level."""
@@ -33,23 +35,23 @@ class AdditionalRoom(str, Enum):
     POOJA_ROOM = "Pooja Room"
 
 # --- Main Property Model ---
-
+# kept everything optional right now, confirm datatypes and decide enums
 class Property(BaseModel):
     """The main property listing model, including embedded customer/seller details."""
     property_id: Optional[str] = None
-    title: str
+    title: Optional[str] = None
     
     # Using Enums for validation and limited choices
     property_type: Optional[PropertyType] = None
     furnishing_status: Optional[FurnishingStatus] = None
     
     description: Optional[str] = None
-    locality: str
-    price: float
-    bhk: int
+    locality: Optional[str] = None
+    price: Optional[float] = None
+    bhk: Optional[int] = None
     facing_direction: Optional[str] = None
-    area_sqft: int
-    bathrooms: int
+    area_sqft: Optional[int] = None
+    bathrooms: Optional[int] = None
     
     # Optional[List[Enum]] allows multiple selections for views/rooms
     overlooking: Optional[List[Overlooking]] = []

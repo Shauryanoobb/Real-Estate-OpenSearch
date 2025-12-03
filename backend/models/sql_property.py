@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base
 from typing import Optional, List
 import uuid # Needed for default factory, assuming this import exists nearby
 
+#this script doesnt overwrite , so first drop table
 # Base for SQLAlchemy models
 Base = declarative_base()
 
@@ -14,15 +15,15 @@ class SQLProperty(Base):
     id = Column(String, primary_key=True) 
     
     # Required Fields
-    title = Column(String, nullable=False)
-    locality = Column(String, nullable=False)
-    price = Column(Float, nullable=False)
-    bhk = Column(Integer, nullable=False)
-    bathrooms = Column(Integer, nullable=False)
-    area_sqft = Column(Integer, nullable=False)
+    title = Column(String)
+    locality = Column(String)
+    price = Column(Float)
+    bhk = Column(Integer)
+    bathrooms = Column(Integer)
+    area_sqft = Column(Integer)
     
     # Using SQLAlchemy's Enum type (ensure the values match the Python Enum strings)
-    property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', name="property_types"), nullable=False)
+    property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', 'Agricultural Land', 'Industrial Land', name="property_types"))
     
     # Optional Fields
     description = Column(String)
