@@ -3,28 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page_title">Add New Property</title>
+    <title id="page_title">Manage Property Listing</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 p-6">
 
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
-        <h1 id="form_title" class="text-3xl font-extrabold text-green-700 mb-6 border-b pb-2">➕ Add New Property</h1>
-        <p class="text-gray-600 mb-6">Fill in the details to list or update the property information (All fields optional).</p>
+        <h1 id="form_title" class="text-3xl font-extrabold text-green-700 mb-6 border-b pb-2">➕ Add New Listing</h1>
+        
+        <!-- Context Switcher -->
+        <div class="mb-6 flex space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="listing_context" value="supply" checked onchange="setContext('supply')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Supply (New Inventory)</span>
+            </label>
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="listing_context" value="demand" onchange="setContext('demand')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Demand (Client Request)</span>
+            </label>
+        </div>
 
         <form id="propertyForm" class="space-y-6">
             
-            <!-- Hidden field to store the OpenSearch ID when updating (the document ID) -->
+            <!-- Hidden field to store the OpenSearch ID when updating -->
             <input type="hidden" id="opensearch_id_hidden">
             
             <!-- BASIC INFORMATION -->
             <div class="border p-4 rounded-xl">
-                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Basic Information</h2>
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Core Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     
                     <!-- ID DISPLAY: Shown only when in Update mode (for reference) -->
                     <div class="col-span-2 hidden mb-4" id="property_id_display"> 
-                        <label class="block text-sm font-medium text-gray-700">OpenSearch ID (Cannot be changed)</label>
+                        <label class="block text-sm font-medium text-gray-700">OpenSearch ID</label>
                         <p id="displayed_property_id" class="p-2 bg-gray-100 border border-gray-300 rounded-md font-mono text-sm"></p>
                     </div>
                     
@@ -48,7 +59,7 @@
                         </select>
                     </div>
 
-                    <!-- NEW: LISTING TYPE (ENUM) -->
+                    <!-- LISTING TYPE (ENUM) -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Listing For</label>
                         <select id="listing_type" onchange="toggleDepositField()" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -58,16 +69,29 @@
                         </select>
                     </div>
 
-                    <div>
+                    <!-- PRICE INPUTS (DYNAMICALLY HIDDEN/SHOWN) -->
+                    <div id="price_exact_group" class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Price / Rent (₹)</label>
                         <input type="number" id="price" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
+                    
+                    <div id="price_range_group" class="hidden grid grid-cols-2 gap-4 col-span-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Budget Min (₹)</label>
+                            <input type="number" id="price_min" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Budget Max (₹)</label>
+                            <input type="number" id="price_max" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
 
-                    <!-- NEW: DEPOSIT FIELD (CONDITIONAL) -->
+                    <!-- DEPOSIT FIELDS (CONDITIONAL) -->
                     <div id="deposit_group" class="hidden col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Deposit Amount (₹)</label>
+                        <label class="block text-sm font-medium text-gray-700" id="deposit_label">Deposit Amount (₹)</label>
                         <input type="number" id="deposit" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
                     </div>
+                    
                 </div>
                 <div class="mt-4">
                     <label class="block text-sm font-medium text-gray-700">Description</label>
@@ -81,14 +105,59 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <input type="text" id="locality" class="col-span-full md:col-span-2 p-2 border rounded-md" placeholder="Locality">
                     
-                    <input type="number" id="bhk" class="p-2 border rounded-md" placeholder="BHK">
+                    <!-- BHK INPUTS (DYNAMICALLY HIDDEN/SHOWN) -->
+                    <div id="bhk_exact_group" class="col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">BHK</label>
+                        <input type="number" id="bhk" class="p-2 border rounded-md w-full" placeholder="e.g., 3">
+                    </div>
+                    
+                    <div id="bhk_range_group" class="hidden grid grid-cols-2 gap-4 col-span-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">BHK Min</label>
+                            <input type="number" id="bhk_min" class="p-2 border rounded-md w-full" placeholder="Min">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">BHK Max</label>
+                            <input type="number" id="bhk_max" class="p-2 border rounded-md w-full" placeholder="Max">
+                        </div>
+                    </div>
+
+                    <!-- AREA INPUTS (DYNAMICALLY HIDDEN/SHOWN) -->
+                    <div id="area_exact_group" class="col-span-1">
+                         <label class="block text-sm font-medium text-gray-700">Area (sqft)</label>
+                         <input type="number" id="area_sqft" class="p-2 border rounded-md w-full" placeholder="Area (sqft)">
+                    </div>
+
+                    <div id="area_range_group" class="hidden grid grid-cols-2 gap-4 col-span-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Area Min (sqft)</label>
+                            <input type="number" id="area_sqft_min" class="p-2 border rounded-md w-full" placeholder="Min sqft">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Area Max (sqft)</label>
+                            <input type="number" id="area_sqft_max" class="p-2 border rounded-md w-full" placeholder="Max sqft">
+                        </div>
+                    </div>
+                    
                     <input type="number" id="bathrooms" class="p-2 border rounded-md" placeholder="Bathrooms">
-                    <input type="number" id="area_sqft" class="p-2 border rounded-md" placeholder="Area (sqft)">
                     <input type="text" id="facing_direction" class="p-2 border rounded-md" placeholder="Facing Direction">
                     
-                    <input type="number" id="floor_number" class="p-2 border rounded-md" placeholder="Floor Number">
-                    <input type="number" id="total_floors" class="p-2 border rounded-md" placeholder="Total Floors">
+                    <!-- SUPPLY-ONLY FIELDS -->
+                    <div class="col-span-1 supply-only">
+                         <label class="block text-sm font-medium text-gray-700">Floor Number</label>
+                         <input type="number" id="floor_number" class="p-2 border rounded-md w-full" placeholder="Floor Number">
+                    </div>
+                    <div class="col-span-1 supply-only">
+                         <label class="block text-sm font-medium text-gray-700">Total Floors</label>
+                         <input type="number" id="total_floors" class="p-2 border rounded-md w-full" placeholder="Total Floors">
+                    </div>
                     
+                    <!-- DEMAND-ONLY FIELDS -->
+                    <div class="col-span-2 hidden demand-only">
+                         <label class="block text-sm font-medium text-gray-700">Target Move-in Date</label>
+                         <input type="date" id="move_in_date" class="p-2 border rounded-md w-full">
+                    </div>
+
                     <!-- ADDITIONAL ROOMS (Multi-Select) -->
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Additional Rooms (Ctrl/Cmd + Click)</label>
@@ -115,7 +184,7 @@
 
             <!-- FURNISHING & DATES -->
             <div class="border p-4 rounded-xl">
-                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Furnishing & Dates</h2>
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Furnishing & Features</h2>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     
                     <!-- FURNISHING STATUS (ENUM) -->
@@ -147,17 +216,17 @@
                 </div>
             </div>
             
-            <!-- SELLER DETAILS -->
+            <!-- CUSTOMER DETAILS -->
             <div class="border p-4 rounded-xl">
-                <h2 class="text-xl font-semibold text-indigo-600 mb-4">Seller Details (Source of Truth)</h2>
+                <h2 class="text-xl font-semibold text-indigo-600 mb-4" id="customer_header">Seller Details</h2>
                 <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="seller_name" class="p-2 border rounded-md" placeholder="Seller Name">
-                    <input type="email" id="seller_email" class="p-2 border rounded-md" placeholder="Seller Email">
-                    <input type="tel" id="seller_phone" class="p-2 border rounded-md" placeholder="Seller Phone">
-                    <input type="text" id="seller_referred_by" class="p-2 border rounded-md" placeholder="Referred By">
+                    <input type="text" id="customer_name" class="p-2 border rounded-md" placeholder="Name">
+                    <input type="email" id="customer_email" class="p-2 border rounded-md" placeholder="Email">
+                    <input type="tel" id="customer_phone" class="p-2 border rounded-md" placeholder="Phone">
+                    <input type="text" id="customer_referred_by" class="p-2 border rounded-md" placeholder="Referred By">
                     
-                    <input type="text" id="seller_address" class="col-span-full p-2 border rounded-md" placeholder="Seller Address">
-                    <textarea id="seller_additional_info" rows="2" class="col-span-full p-2 border rounded-md" placeholder="Seller Additional Notes"></textarea>
+                    <input type="text" id="customer_address" class="col-span-full p-2 border rounded-md" placeholder="Address">
+                    <textarea id="customer_additional_info" rows="2" class="col-span-full p-2 border rounded-md" placeholder="Additional Notes"></textarea>
                 </div>
             </div>
 
@@ -168,13 +237,21 @@
 
         <div id="response_message" class="mt-6 p-4 rounded-lg text-center font-medium hidden"></div>
 
+        <!-- NEW: MATCH RESULTS SECTION -->
+        <div id="match_results_section" class="mt-8 border-t pt-6 hidden">
+            <h2 class="text-2xl font-bold text-red-600 mb-4">🔍 Cross-Match Results</h2>
+            <div id="match_results_content" class="space-y-4">
+                <p class="text-gray-500">Matching records will appear here after submission.</p>
+            </div>
+        </div>
+
         <div class="mt-8 text-center">
             <a href="/static/search_list.html" class="text-indigo-600 hover:text-indigo-800 font-medium">← Back to Search/List</a>
         </div>
     </div>
 
     <script>
-        const BASE_URL = window.location.origin + "/api/properties";
+        const BASE_URL = window.location.origin + "/api";
         const urlParams = new URLSearchParams(window.location.search);
         const propertyIdParam = urlParams.get('id');
         const form = document.getElementById('propertyForm');
@@ -182,13 +259,72 @@
         const hiddenIdInput = document.getElementById('opensearch_id_hidden');
         const idDisplayGroup = document.getElementById('property_id_display');
         const displayedId = document.getElementById('displayed_property_id');
-        const depositGroup = document.getElementById('deposit_group'); 
+        
+        // Dynamic Field Groups
+        const depositGroup = document.getElementById('deposit_group');
+        const priceExactGroup = document.getElementById('price_exact_group');
+        const priceRangeGroup = document.getElementById('price_range_group');
+        const bhkExactGroup = document.getElementById('bhk_exact_group');
+        const bhkRangeGroup = document.getElementById('bhk_range_group');
+        const areaExactGroup = document.getElementById('area_exact_group');
+        const areaRangeGroup = document.getElementById('area_range_group');
+        const supplyOnlyFields = document.querySelectorAll('.supply-only');
+        const demandOnlyFields = document.querySelectorAll('.demand-only');
+        const customerHeader = document.getElementById('customer_header');
+        const submitButton = document.getElementById('submit_button');
 
-        // Helper function to show/hide the Deposit field based on Listing Type
+        let currentContext = 'supply'; // 'supply' or 'demand'
+        
+        function setContext(context) {
+            currentContext = context;
+            
+            // 1. Update UI and Headers
+            const headerText = context === 'supply' ? 'Seller Details' : 'Requester Details';
+            customerHeader.textContent = headerText;
+            submitButton.textContent = context === 'supply' ? '✨ Add Property to Inventory' : '📝 Submit Demand Request';
+            
+            // 2. Toggle Display Groups (Ranges vs Exact)
+            if (context === 'supply') {
+                // Show Supply Fields (Exact measurements)
+                priceExactGroup.classList.remove('hidden');
+                bhkExactGroup.classList.remove('hidden');
+                areaExactGroup.classList.remove('hidden');
+                priceRangeGroup.classList.add('hidden');
+                bhkRangeGroup.classList.add('hidden');
+                areaRangeGroup.classList.add('hidden');
+                demandOnlyFields.forEach(el => el.classList.add('hidden'));
+                supplyOnlyFields.forEach(el => el.classList.remove('hidden'));
+            } else {
+                // Show Demand Fields (Ranges)
+                priceExactGroup.classList.add('hidden');
+                bhkExactGroup.classList.add('hidden');
+                areaExactGroup.classList.add('hidden');
+                priceRangeGroup.classList.remove('hidden');
+                bhkRangeGroup.classList.remove('hidden');
+                areaRangeGroup.classList.remove('hidden');
+                supplyOnlyFields.forEach(el => el.classList.add('hidden'));
+                demandOnlyFields.forEach(el => el.classList.remove('hidden'));
+            }
+
+            // 3. Re-run conditional deposit visibility
+            toggleDepositField();
+            
+            // 4. Clear all inputs to avoid submitting mixed data (Crucial for dual model forms)
+            form.reset(); 
+        }
+
+        // Helper function to show/hide the Deposit field based on Listing Type and Context
         function toggleDepositField() {
             const listingType = document.getElementById('listing_type').value;
+            const depositLabel = document.getElementById('deposit_label');
+
             if (listingType === 'RENT') {
                 depositGroup.classList.remove('hidden');
+                if (currentContext === 'supply') {
+                    depositLabel.textContent = 'Deposit Amount (₹)';
+                } else {
+                    depositLabel.textContent = 'Deposit Max Budget (₹)';
+                }
             } else {
                 depositGroup.classList.add('hidden');
                 document.getElementById('deposit').value = ''; // Clear value if hidden
@@ -204,60 +340,60 @@
 
         function serializeForm() {
             const data = {};
-            const fields = [
+            
+            // Shared Fields
+            const sharedFields = [
                 "title", "description", "locality", "facing_direction",
                 "property_type", "listing_type", "furnishing_status", "listed_date",
-                // Seller Fields
-                "seller_name", "seller_email", "seller_phone", "seller_address", "seller_referred_by", "seller_additional_info"
+                // Customer Fields (Shared across both models)
+                "customer_name", "customer_email", "customer_phone", "customer_address", 
+                "customer_referred_by", "customer_additional_info"
             ];
-            const numberFields = [
-                "price", "deposit", "bhk", "bathrooms", "area_sqft",
-                "age_of_building", "floor_number", "total_floors"
-            ];
+            
+            // Numeric and Spec Fields (Contextual)
+            const supplyFields = ["price", "deposit", "bhk", "bathrooms", "area_sqft", 
+                                  "age_of_building", "floor_number", "total_floors"];
+            const demandFields = ["price_min", "price_max", "deposit_max", "bhk_min", 
+                                  "bhk_max", "area_sqft_min", "area_sqft_max"];
+            
             const booleanFields = ["lift_available"];
 
-            fields.forEach(f => { 
+            // 1. Process Shared/Standard Fields
+            sharedFields.forEach(f => { 
                 const element = document.getElementById(f);
                 if (element) data[f] = element.value || null; 
             });
             
-            // Loop for number fields, safely checking for existence and parsing
-            numberFields.forEach(f => {
+            // 2. Process Contextual Numeric Fields
+            let numericFieldsToProcess = currentContext === 'supply' ? supplyFields : demandFields;
+
+            numericFieldsToProcess.forEach(f => {
                 const element = document.getElementById(f);
-                if (element) {
-                    const val = element.value;
-                    data[f] = val ? parseFloat(val) : null; 
+                if (element && element.value) {
+                    data[f] = parseFloat(element.value); 
                 }
             });
             
-            // Loop for boolean fields
+            // 3. Process Boolean/Arrays
             booleanFields.forEach(f => {
                 const val = document.getElementById(f).value;
                 data[f] = val === "true" ? true : (val === "false" ? false : null);
             });
 
-            // Handle Array/List Fields
-            const amenitiesValue = document.getElementById("amenities").value;
-            data.amenities = amenitiesValue ? amenitiesValue.split(",").map(a => a.trim()).filter(a => a) : [];
-            
-            const imagesValue = document.getElementById("images").value;
-            data.images = imagesValue ? imagesValue.split(",").map(a => a.trim()).filter(a => a) : [];
-
-            // Handle Multi-Select Enum Fields
+            data.amenities = document.getElementById("amenities").value.split(",").map(a => a.trim()).filter(a => a) || [];
+            data.images = document.getElementById("images").value.split(",").map(a => a.trim()).filter(a => a) || [];
             data.overlooking = getMultiSelectValues('overlooking');
             data.additional_rooms = getMultiSelectValues('additional_rooms');
-
-
-            // Explicitly set property_id ONLY if we are in Update mode (PUT)
+            
+            // 4. Handle ID for Update (PUT)
             if (propertyIdParam) {
                  data.property_id = hiddenIdInput.value; 
             }
 
-            // CRITICAL FIX: Ensure all null/empty values are explicitly deleted 
+            // 5. Clean up null/empty values for Pydantic
             Object.keys(data).forEach(key => {
                 const value = data[key];
-                // Check if deposit is being passed, if it's 0 it should remain, but if it's null/empty string/empty array delete it
-                if (key !== 'deposit' && (value === null || value === '' || (Array.isArray(value) && value.length === 0))) {
+                if (value === null || value === '' || (Array.isArray(value) && value.length === 0)) {
                     delete data[key];
                 }
             });
@@ -277,82 +413,100 @@
         function populateForm(data) {
             const source = data._source || data;
             
-            // Set the ID display and hidden input for Update mode
+            // Set Context and ID
+            const isSupply = source.hasOwnProperty('price'); // Heuristic to guess model type
+            currentContext = isSupply ? 'supply' : 'demand';
+            document.querySelector(`input[name="listing_context"][value="${currentContext}"]`).checked = true;
+            
             if (propertyIdParam) {
                 hiddenIdInput.value = propertyIdParam; 
                 displayedId.textContent = propertyIdParam;
             }
             
-            // Basic Fields
+            setContext(currentContext); // Setup dynamic groups first
+
+            // Populate all fields based on model
             document.getElementById("title").value = source.title || '';
             document.getElementById("description").value = source.description || '';
             document.getElementById("locality").value = source.locality || '';
-            
-            // NEW FIELDS
-            document.getElementById("listing_type").value = source.listing_type || '';
-            document.getElementById("deposit").value = source.deposit || ''; // Populate deposit if it exists
-
-            document.getElementById("price").value = source.price || '';
-            document.getElementById("bhk").value = source.bhk || '';
-            document.getElementById("bathrooms").value = source.bathrooms || '';
-            document.getElementById("area_sqft").value = source.area_sqft || '';
-            document.getElementById("facing_direction").value = source.facing_direction || '';
-            document.getElementById("floor_number").value = source.floor_number || '';
-            document.getElementById("total_floors").value = source.total_floors || '';
-            document.getElementById("age_of_building").value = source.age_of_building || '';
-            document.getElementById("listed_date").value = source.listed_date ? source.listed_date.split('T')[0] : '';
-            
-            // Seller Fields
-            document.getElementById("seller_name").value = source.seller_name || '';
-            document.getElementById("seller_email").value = source.seller_email || '';
-            document.getElementById("seller_phone").value = source.seller_phone || '';
-            document.getElementById("seller_address").value = source.seller_address || '';
-            document.getElementById("seller_referred_by").value = source.seller_referred_by || '';
-            document.getElementById("seller_additional_info").value = source.seller_additional_info || '';
-            
-            // Enum Selects (Single Value)
             document.getElementById("property_type").value = source.property_type || '';
+            document.getElementById("listing_type").value = source.listing_type || '';
             document.getElementById("furnishing_status").value = source.furnishing_status || '';
             
-            // Boolean Selects
+            // Dynamic Price/BHK/Area Population
+            if (isSupply) {
+                document.getElementById("price").value = source.price || '';
+                document.getElementById("deposit").value = source.deposit || '';
+                document.getElementById("bhk").value = source.bhk || '';
+                document.getElementById("area_sqft").value = source.area_sqft || '';
+                // Supply-only fields
+                document.getElementById("floor_number").value = source.floor_number || '';
+                document.getElementById("total_floors").value = source.total_floors || '';
+            } else {
+                document.getElementById("price_min").value = source.price_min || '';
+                document.getElementById("price_max").value = source.price_max || '';
+                document.getElementById("deposit_max").value = source.deposit_max || '';
+                document.getElementById("bhk_min").value = source.bhk_min || '';
+                document.getElementById("bhk_max").value = source.bhk_max || '';
+                document.getElementById("area_sqft_min").value = source.area_sqft_min || '';
+                document.getElementById("area_sqft_max").value = source.area_sqft_max || '';
+                // Demand-only field
+                document.getElementById("move_in_date").value = source.move_in_date ? source.move_in_date.split('T')[0] : '';
+            }
+            
+            // Other Shared Fields
+            document.getElementById("bathrooms").value = source.bathrooms || '';
+            document.getElementById("facing_direction").value = source.facing_direction || '';
+            document.getElementById("age_of_building").value = source.age_of_building || '';
+            document.getElementById("listed_date").value = source.listed_date ? source.listed_date.split('T')[0] : '';
             document.getElementById("lift_available").value = source.lift_available !== undefined && source.lift_available !== null ? source.lift_available.toString() : '';
 
-            // Array Fields (Single Input)
             document.getElementById("amenities").value = Array.isArray(source.amenities) ? source.amenities.join(', ') : '';
             document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
-
-            // Array/Enum Multi-Selects
             setMultiSelectValues('overlooking', source.overlooking);
             setMultiSelectValues('additional_rooms', source.additional_rooms);
 
-            // CRITICAL: Call toggleDepositField AFTER setting listing_type to ensure visibility is correct
+            // Customer Details
+            document.getElementById("customer_name").value = source.customer_name || '';
+            document.getElementById("customer_email").value = source.customer_email || '';
+            document.getElementById("customer_phone").value = source.customer_phone || '';
+            document.getElementById("customer_address").value = source.customer_address || '';
+            document.getElementById("customer_referred_by").value = source.customer_referred_by || '';
+            document.getElementById("customer_additional_info").value = source.customer_additional_info || '';
+
+
             toggleDepositField(); 
 
-            // Configuration for Update Mode visibility
             if (propertyIdParam) {
-                idDisplayGroup.classList.remove('hidden'); // Show ID on update
+                idDisplayGroup.classList.remove('hidden'); 
             }
         }
 
 
-        // --- Main Logic (Submit Handler remains unchanged) ---
+        // --- Main Logic (Submit Handler) ---
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize visibility in case we are in Add mode or Sale mode
-            toggleDepositField(); 
-
+            setContext('supply'); // Default to supply view on load
+            
             if (propertyIdParam) {
                 // Update Mode Setup
-                document.getElementById('page_title').textContent = 'Update Property';
-                document.getElementById('form_title').textContent = '✏️ Update Property: ' + propertyIdParam;
-                document.getElementById('submit_button').textContent = '🔄 Update Property';
-                document.getElementById('submit_button').classList.replace('bg-green-600', 'bg-indigo-600');
-                document.getElementById('submit_button').classList.replace('hover:bg-green-700', 'hover:bg-indigo-700');
+                // Determine context from the URL if possible, otherwise default to supply
+                const contextFromUrl = urlParams.get('context') || 'supply';
+                currentContext = contextFromUrl;
+                document.querySelector(`input[name="listing_context"][value="${currentContext}"]`).checked = true;
+
+                document.getElementById('page_title').textContent = 'Update Listing';
+                document.getElementById('form_title').textContent = `✏️ Update ${currentContext.toUpperCase()}: ${propertyIdParam}`;
+                setContext(currentContext); // Apply context rules for ranges/exact
+
+                // API Fetch URL changes based on context: /api/supply/{id} OR /api/demand/{id}
+                const fetchUrl = `${BASE_URL}/${currentContext}/${propertyIdParam}`;
+                document.getElementById('submit_button').textContent = `🔄 Update ${currentContext.toUpperCase()}`;
                 
                 try {
-                    const res = await fetch(`${BASE_URL}/${propertyIdParam}`);
+                    const res = await fetch(fetchUrl);
                     if (res.status === 404) {
-                        responseMessage.textContent = 'Property ID not found for update.';
+                        responseMessage.textContent = 'Listing ID not found for update.';
                         responseMessage.className = 'mt-6 p-4 bg-red-100 text-red-700 rounded-lg text-center font-medium block';
                         return;
                     }
@@ -360,11 +514,10 @@
                     const data = await res.json();
                     populateForm(data);
                 } catch (error) {
-                    responseMessage.textContent = `Error fetching property for update: ${error.message}`;
+                    responseMessage.textContent = `Error fetching listing for update: ${error.message}`;
                     responseMessage.className = 'mt-6 p-4 bg-red-100 text-red-700 rounded-lg text-center font-medium block';
                 }
             } else {
-                // Addition Mode: Ensure ID field is hidden and clean
                 idDisplayGroup.classList.add('hidden');
             }
         });
@@ -372,9 +525,6 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Check HTML5 validity before proceeding 
-            // NOTE: form.checkValidity() will now only check fields with the 'required' attribute, 
-            // which are currently none in the current HTML.
             if (!form.checkValidity()) {
                 return; 
             }
@@ -383,7 +533,10 @@
             
             const method = propertyIdParam ? 'PUT' : 'POST';
             const id = propertyIdParam; 
-            const url = propertyIdParam ? `${BASE_URL}/${id}` : BASE_URL;
+            
+            // CRITICAL: Endpoint depends on the current context (Supply/Demand)
+            const endpoint = currentContext; 
+            const url = propertyIdParam ? `${BASE_URL}/${endpoint}/${id}` : `${BASE_URL}/${endpoint}/`;
             
             responseMessage.textContent = 'Submitting...';
             responseMessage.className = 'mt-6 p-4 bg-blue-100 text-blue-700 rounded-lg text-center font-medium block';
@@ -391,6 +544,7 @@
 
             console.log(`--- API Call ---`);
             console.log(`Method: ${method}`);
+            console.log(`Endpoint: ${endpoint}`);
             console.log(`URL: ${url}`);
             console.log("Payload:", JSON.stringify(formData, null, 2));
 
@@ -410,8 +564,33 @@
                      const errorDetail = json.detail ? JSON.stringify(json.detail) : JSON.stringify(json);
                      throw new Error(`API Error (${res.status}): ${errorDetail}`);
                 }
+                
+                // --- Display Match Results ---
+                const matchResultsSection = document.getElementById('match_results_section');
+                const matchResultsContent = document.getElementById('match_results_content');
+                matchResultsSection.classList.remove('hidden');
 
-                responseMessage.textContent = `Success! Property ${returnedId} has been ${propertyIdParam ? 'updated' : 'added (ID auto-assigned)'}.`;
+                if (json.matches && json.matches.length > 0) {
+                    const matchType = currentContext === 'supply' ? 'Demand Requests' : 'Properties';
+                    matchResultsContent.innerHTML = `
+                        <p class="text-xl font-semibold text-green-700">${json.matches.length} Matching ${matchType} Found!</p>
+                        <ul class="list-disc list-inside space-y-2 p-4 bg-yellow-50 rounded-lg">
+                            ${json.matches.map(match => {
+                                const source = match._source;
+                                const matchId = match._id;
+                                const matchTitle = source.title || source.customer_name || 'Unnamed Record';
+                                return `<li class="text-gray-700 text-sm">
+                                    <span class="font-medium">${matchTitle}</span> (ID: ${matchId}). 
+                                    Price Match: ${source.price ? '₹' + source.price.toLocaleString('en-IN') : (source.price_min && source.price_max) ? `₹${source.price_min} - ₹${source.price_max}` : 'N/A'}
+                                </li>`;
+                            }).join('')}
+                        </ul>
+                    `;
+                } else {
+                    matchResultsContent.innerHTML = `<p class="text-red-500 font-semibold">No direct cross-matches found in the ${currentContext === 'supply' ? 'Demand' : 'Supply'} index.</p>`;
+                }
+
+                responseMessage.textContent = `Success! ${currentContext.toUpperCase()} record ${returnedId} submitted.`;
                 responseMessage.className = 'mt-6 p-4 bg-green-100 text-green-700 rounded-lg text-center font-medium block';
 
                 if (!propertyIdParam) {

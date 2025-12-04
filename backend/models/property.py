@@ -5,7 +5,6 @@ from enum import Enum
 # --- Enumerations for Constrained Choices ---
 
 class PropertyType(str, Enum):
-    """Enumeration for classifying the type of real estate."""
     FLAT = "Flat"
     BUNGALOW = "Bungalow"
     PLOT = "Plot"
@@ -15,67 +14,93 @@ class PropertyType(str, Enum):
     INDUSTRIAL_LAND = "Industrial Land"
 
 class ListingType(str, Enum):
-    """Enumeration for listing type."""
     SALE = "SALE"
     RENT = "RENT"
 
 class FurnishingStatus(str, Enum):
-    """Enumeration for property furnishing level."""
     FURNISHED = "FURNISHED"
     UNFURNISHED = "UNFURNISHED"
     SEMI_FURNISHED = "SEMI_FURNISHED"
 
 class Overlooking(str, Enum):
-    """Enumeration for views from the property."""
     PARK = "Park"
     MAIN_ROAD = "Main Road"
     GARDEN = "Garden"
     POOL = "Pool"
 
 class AdditionalRoom(str, Enum):
-    """Enumeration for possible extra rooms."""
     STORE_ROOM = "Store Room"
     STUDY_ROOM = "Study Room"
     SERVANT_ROOM = "Servant Room"
     POOJA_ROOM = "Pooja Room"
 
-# --- Main Property Model ---
-class Property(BaseModel):
-    """The main property listing model, including embedded customer/seller details."""
+# --- Base Fields (Shared between Supply and Demand) ---
+
+class BaseListing(BaseModel):
+    """Base model containing fields common to both inventory and demand requests."""
+    
+    # Optional fields for both, but must be present in the DB schema
     property_id: Optional[str] = None
     title: Optional[str] = None
+    description: Optional[str] = None
+    locality: Optional[str] = None
     
-    # Using Enums for validation and limited choices
+    # Enum fields
     property_type: Optional[PropertyType] = None
     listing_type: Optional[ListingType] = None
     furnishing_status: Optional[FurnishingStatus] = None
-    
-    description: Optional[str] = None
-    locality: Optional[str] = None
-    price: Optional[float] = None
-    deposit: Optional[float] = None  # Only for RENT listings
-    bhk: Optional[int] = None
-    facing_direction: Optional[str] = None
-    area_sqft: Optional[int] = None
-    bathrooms: Optional[int] = None
-    
-    # Optional[List[Enum]] allows multiple selections for views/rooms
+
+    # Arrays
     overlooking: Optional[List[Overlooking]] = []
     additional_rooms: Optional[List[AdditionalRoom]] = []
-
     amenities: Optional[List[str]] = []
     images: Optional[List[str]] = [] 
 
     listed_date: Optional[str] = None
-    age_of_building: Optional[int] = None
     lift_available: Optional[bool] = None
+    
+    # Seller/Requester Details (Flattened)
+    customer_name: Optional[str] = None # Renamed from seller_name
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    customer_referred_by: Optional[str] = None
+    customer_additional_info: Optional[str] = None
+
+# --- 1. Supply (Inventory) Model ---
+
+class SupplyProperty(BaseListing):
+    """Represents a specific, available property for Sale or Rent."""
+    
+    price: Optional[float] = None
+    deposit: Optional[float] = None  # Only for RENT listings
+
+    bhk: Optional[int] = None
+    area_sqft: Optional[int] = None
+    bathrooms: Optional[int] = None
+    
+    facing_direction: Optional[str] = None
+    age_of_building: Optional[int] = None
     floor_number: Optional[int] = None
     total_floors: Optional[int] = None
 
-    # --- Flattened Customer/Seller Details (One-to-One) ---
-    seller_name: Optional[str] = None
-    seller_email: Optional[str] = None
-    seller_phone: Optional[str] = None
-    seller_address: Optional[str] = None
-    seller_referred_by: Optional[str] = None
-    seller_additional_info: Optional[str] = None
+# --- 2. Demand (Request) Model ---
+
+class DemandRequest(BaseListing):
+    """Represents a client's requirements, using min/max ranges for search."""
+    
+    # Financial Ranges (Price/Budget)
+    price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    deposit_max: Optional[float] = None
+
+    # Specification Ranges
+    bhk_min: Optional[int] = None
+    bhk_max: Optional[int] = None
+    area_sqft_min: Optional[int] = None
+    area_sqft_max: Optional[int] = None
+
+    # Additional Demand Fields
+    move_in_date: Optional[str] = None
+    
+    # Customer name remains customer_name from BaseListing

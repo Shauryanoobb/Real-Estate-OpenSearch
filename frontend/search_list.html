@@ -6,177 +6,87 @@
     <title>Property Search & List</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-4 sm:p-6">
+<body class="bg-gray-50 p-6">
 
-    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mb-4 sm:mb-6 border-b pb-2">🏠 Real Estate Property Portal</h1>
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
+        <h1 class="text-3xl font-extrabold text-indigo-700 mb-6 border-b pb-2">🏠 Real Estate Matching Portal</h1>
 
-        <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:space-x-4 sm:gap-0">
-            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition duration-150 text-center">➕ Add New Property</a>
-            <button onclick="listAllProperties()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All Properties</button>
-            <button onclick="toggleFilters()" class="sm:hidden bg-gray-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-700 transition duration-150">🔍 Toggle Filters</button>
+        <!-- Context Switcher -->
+        <div class="mb-6 flex space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="search_context" value="supply" checked onchange="setSearchContext('supply')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Search Inventory (Supply)</span>
+            </label>
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="search_context" value="demand" onchange="setSearchContext('demand')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Search Requests (Demand)</span>
+            </label>
         </div>
 
-        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Find Your Property</h2>
-        <div id="filterPanel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-indigo-50 p-4 sm:p-6 rounded-xl mb-6 sm:mb-8">
-
-            <!-- Basic Search -->
-            <div class="col-span-full sm:col-span-2 lg:col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Locality</label>
-                <input id="locality" class="w-full p-2.5 sm:p-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base" placeholder="Search by locality">
-            </div>
-
-            <div class="col-span-full sm:col-span-2 lg:col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Keywords</label>
-                <input id="keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Description keywords">
-            </div>
-            
-            <div class="col-span-full sm:col-span-2">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Title Keywords</label>
-                <input id="title_keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search in title">
-            </div>
-            
-            <!-- Listing Type -->
-            <div class="col-span-full sm:col-span-2 lg:col-span-1">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Listing Type</label>
-                <select id="listing_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
-                    <option value="">All Listings</option>
-                    <option value="SALE">For Sale</option>
-                    <option value="RENT">For Rent</option>
-                </select>
-            </div>
-            
-            <!-- Property Type -->
-            <div class="col-span-full sm:col-span-2 lg:col-span-1">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Property Type</label>
-                <select id="property_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
-                    <option value="">All Types</option>
-                    <option value="Flat">Flat</option>
-                    <option value="Bungalow">Bungalow</option>
-                    <option value="Plot">Plot</option>
-                    <option value="Office">Office</option>
-                    <option value="Shop">Shop</option>
-                    <option value="Agricultural Land">Agricultural Land</option>
-                    <option value="Industrial Land">Industrial Land</option>
-                </select>
-            </div>
-
-            <div class="col-span-full sm:col-span-1 lg:col-span-1">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Furnishing</label>
-                <select id="furnishing_status" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
-                    <option value="">Any</option>
-                    <option value="FURNISHED">Furnished</option>
-                    <option value="SEMI_FURNISHED">Semi-Furnished</option>
-                    <option value="UNFURNISHED">Unfurnished</option>
-                </select>
-            </div>
-
-            <!-- Specifications -->
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">BHK</label>
-                <input id="bhk" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="e.g., 2">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Min Area (sqft)</label>
-                <input id="min_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Max Area (sqft)</label>
-                <input id="max_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Total Floors</label>
-                <input id="total_floors" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Exact">
-            </div>
-
-            <!-- Price Range -->
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Min Price (₹)</label>
-                <input id="min_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
-            </div>
-            
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Max Price (₹)</label>
-                <input id="max_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
-            </div>
-
-            <!-- Lift -->
-            <div class="col-span-full sm:col-span-2 lg:col-span-1">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Lift Available?</label>
-                <select id="has_lift" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
-                    <option value="">Any</option>
-                    <option value="true">Yes</option>
-                    <option value="false">No</option>
-                </select>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="col-span-full flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2">
-                <button onclick="searchProperties()" class="flex-1 bg-indigo-600 text-white p-2.5 sm:p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 text-sm sm:text-base">
-                    🔍 Search Properties
-                </button>
-                <button onclick="clearFilters()" class="flex-1 sm:flex-none bg-gray-500 text-white px-4 sm:px-6 py-2.5 sm:p-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-150 text-sm sm:text-base">
-                    Clear Filters
-                </button>
-            </div>
+        <div class="mb-8 flex space-x-4">
+            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-150">➕ Add New Listing</a>
+            <button onclick="listAll()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All</button>
         </div>
 
-        <div class="flex justify-between items-center mb-3 sm:mb-4">
-            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Property Listings</h2>
-            <span id="result_count" class="text-sm sm:text-base text-gray-600"></span>
-        </div>
-        
-        <div id="results" class="space-y-4 sm:space-y-6">
-            <p class="text-gray-500 text-sm sm:text-base" id="status_message">Use the search bar or click "List All Properties" to view listings.</p>
-        </div>
-    </div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Find Listings / Requirements</h2>
+        <div id="filterPanel" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-indigo-50 p-6 rounded-xl mb-8">
 
-    <!-- Property Detail Modal -->
-    <div id="detailModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="sticky top-0 bg-white border-b px-4 sm:px-6 py-4 flex justify-between items-center">
-                    <h2 class="text-xl sm:text-2xl font-bold text-indigo-700">Property Details</h2>
-                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">&times;</button>
-                </div>
-                <div id="modalContent" class="p-4 sm:p-6"></div>
+            <!-- CORE FILTERS -->
+            <input id="locality" class="p-3 border rounded-lg" placeholder="Locality">
+            <input id="keywords" class="p-3 border rounded-lg" placeholder="Description keywords">
+            <input id="title_keywords" class="p-3 border rounded-lg" placeholder="Title keywords">
+            
+            <select id="property_type" class="p-3 border rounded-lg">
+                <option value="">Property Type</option>
+                <option value="Flat">Flat</option>
+                <option value="Bungalow">Bungalow</option>
+                <option value="Plot">Plot</option>
+                <option value="Office">Office</option>
+                <option value="Shop">Shop</option>
+                <option value="Agricultural Land">Agricultural Land</option>
+                <option value="Industrial Land">Industrial Land</option>
+            </select>
+            
+            <select id="listing_type" class="p-3 border rounded-lg">
+                <option value="">Listing Type</option>
+                <option value="SALE">Sale</option>
+                <option value="RENT">Rent</option>
+            </select>
+
+            <select id="furnishing_status" class="p-3 border rounded-lg">
+                <option value="">Furnishing Status</option>
+                <option value="FURNISHED">FURNISHED</option>
+                <option value="SEMI_FURNISHED">SEMI-FURNISHED</option>
+                <option value="UNFURNISHED">UNFURNISHED</option>
+            </select>
+
+            <!-- DYNAMIC SPECIFICATION INPUTS CONTAINER -->
+            <div id="spec_fields" class="col-span-full grid grid-cols-4 gap-4">
+                <!-- Content injected here by JavaScript (e.g., price, bhk, sqft inputs) -->
             </div>
+            
+            <button onclick="search()" class="col-span-full md:col-span-2 bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">
+                Search
+            </button>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mt-6 mb-4" id="listing_header">Inventory Listings:</h2>
+        <div id="results" class="space-y-6">
+            <p class="text-gray-500" id="status_message">Select a context and start searching.</p>
         </div>
     </div>
 
     <script>
-        const BASE_URL = window.location.origin + "/api/properties";
+        const BASE_URL = window.location.origin + "/api";
+        let currentSearchContext = 'supply'; // Default context
+
         const resultsContainer = document.getElementById("results");
         const statusMessage = document.getElementById("status_message");
-        const resultCount = document.getElementById("result_count");
-        const detailModal = document.getElementById("detailModal");
-        const modalContent = document.getElementById("modalContent");
-
-        function toggleFilters() {
-            const panel = document.getElementById('filterPanel');
-            panel.classList.toggle('hidden');
-        }
-
-        function clearFilters() {
-            document.getElementById('locality').value = '';
-            document.getElementById('keywords').value = '';
-            document.getElementById('title_keywords').value = '';
-            document.getElementById('listing_type').value = '';
-            document.getElementById('property_type').value = '';
-            document.getElementById('furnishing_status').value = '';
-            document.getElementById('bhk').value = '';
-            document.getElementById('min_sqft').value = '';
-            document.getElementById('max_sqft').value = '';
-            document.getElementById('total_floors').value = '';
-            document.getElementById('min_price').value = '';
-            document.getElementById('max_price').value = '';
-            document.getElementById('has_lift').value = '';
-        }
+        const specFieldsContainer = document.getElementById("spec_fields");
+        const listingHeader = document.getElementById("listing_header");
 
         function formatPrice(price) {
+            if (!price) return 'N/A';
             if (price >= 10000000) {
                 return `₹${(price / 10000000).toFixed(2)} Cr`;
             } else if (price >= 100000) {
@@ -184,9 +94,50 @@
             }
             return `₹${price.toLocaleString('en-IN')}`;
         }
+        
+        function renderSpecFields() {
+            specFieldsContainer.innerHTML = '';
+            
+            if (currentSearchContext === 'supply') {
+                listingHeader.textContent = 'Inventory Listings:';
+                // Fields for Supply Search (Exact or Min/Max)
+                specFieldsContainer.innerHTML = `
+                    <input id="bhk" type="number" class="p-3 border rounded-lg" placeholder="BHK (Exact)">
+                    <input id="min_sqft" type="number" class="p-3 border rounded-lg" placeholder="Min Sqft">
+                    <input id="max_sqft" type="number" class="p-3 border rounded-lg" placeholder="Max Sqft">
+                    <input id="min_price" type="number" class="p-3 border rounded-lg" placeholder="Min Price">
+                    <input id="max_price" type="number" class="p-3 border rounded-lg" placeholder="Max Price">
+                    <select id="has_lift" class="p-3 border rounded-lg">
+                        <option value="">Lift Available?</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                `;
+            } else {
+                listingHeader.textContent = 'Demand Requests:';
+                // Fields for Demand Search (Min/Max Ranges)
+                specFieldsContainer.innerHTML = `
+                    <input id="bhk_min" type="number" class="p-3 border rounded-lg" placeholder="BHK Min">
+                    <input id="bhk_max" type="number" class="p-3 border rounded-lg" placeholder="BHK Max">
+                    <input id="area_sqft_min" type="number" class="p-3 border rounded-lg" placeholder="Area Min">
+                    <input id="area_sqft_max" type="number" class="p-3 border rounded-lg" placeholder="Area Max">
+                    <input id="price_min" type="number" class="p-3 border rounded-lg" placeholder="Budget Min">
+                    <input id="price_max" type="number" class="p-3 border rounded-lg" placeholder="Budget Max">
+                    <select id="has_lift" class="p-3 border rounded-lg">
+                        <option value="">Lift Required?</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                `;
+            }
+        }
 
-        function safeValue(value, defaultValue = 'N/A') {
-            return (value !== null && value !== undefined && value !== '') ? value : defaultValue;
+        function setSearchContext(context) {
+            currentSearchContext = context;
+            renderSpecFields(); // Re-render inputs for the new context
+            resultsContainer.innerHTML = ''; // Clear results
+            statusMessage.textContent = `Ready to search the ${context} index.`;
+            statusMessage.style.display = 'block';
         }
 
         function renderResults(data) {
@@ -194,98 +145,59 @@
             statusMessage.style.display = 'none';
 
             if (!data.hits || data.hits.hits.length === 0) {
-                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold text-sm sm:text-base">No properties found matching your criteria.</p>';
-                resultCount.textContent = '0 properties';
+                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold">No records found matching your criteria.</p>';
                 return;
             }
 
-            const count = data.hits.hits.length;
-            resultCount.textContent = `${count} ${count === 1 ? 'property' : 'properties'} found`;
-
+            const isSupply = currentSearchContext === 'supply';
+            
             data.hits.hits.forEach(hit => {
                 const p = hit._source;
-                const propertyId = hit._id;
+                const recordId = hit._id;
                 
-                // Safe access to property fields
-                const title = safeValue(p.title, 'Untitled Property');
-                const price = p.price ? formatPrice(p.price) : 'Price not specified';
-                const locality = safeValue(p.locality, 'Location not specified');
-                const bhk = safeValue(p.bhk, '?');
-                const area = safeValue(p.area_sqft, '?');
-                const bathrooms = safeValue(p.bathrooms, '?');
+                const title = p.title || p.customer_name || 'Unnamed Record';
                 
-                // Listing type badge
+                // Determine main price display based on context
+                const mainPrice = isSupply 
+                    ? (p.price ? formatPrice(p.price) : 'N/A')
+                    : (p.price_min && p.price_max) ? `${formatPrice(p.price_min)} - ${formatPrice(p.price_max)}` : 'N/A';
+                
+                // Determine main specs display based on context
+                const mainSpecs = isSupply
+                    ? `${p.bhk || '?'} BHK • ${p.area_sqft || '?'} sqft`
+                    : `BHK: ${p.bhk_min || 'Any'} to ${p.bhk_max || 'Any'} • Area: ${p.area_sqft_min || 'Any'} sqft`;
+                
                 const listingBadge = p.listing_type 
-                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span>`
+                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type}</span>`
                     : '';
                 
-                // Build specs array dynamically
-                const specs = [];
-                if (p.bhk) specs.push(`🛏️ ${p.bhk} BHK`);
-                if (p.area_sqft) specs.push(`📐 ${p.area_sqft} sqft`);
-                if (p.bathrooms) specs.push(`🛁 ${p.bathrooms} Bath${p.bathrooms > 1 ? 's' : ''}`);
-                if (p.floor_number) {
-                    specs.push(`🏢 Floor ${p.floor_number}${p.total_floors ? `/${p.total_floors}` : ''}`);
-                }
+                const customerContact = p.customer_email || p.customer_phone || p.customer_name || 'N/A';
                 
-                // Build tags array dynamically
-                const tags = [];
-                if (p.furnishing_status) tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.furnishing_status}</span>`);
-                if (p.lift_available !== null && p.lift_available !== undefined) {
-                    tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.lift_available ? '✓' : '✗'} Lift</span>`);
-                }
-                if (p.age_of_building) tags.push(`<span class="px-2 py-1 bg-gray-100 rounded">${p.age_of_building}yr old</span>`);
-                if (p.listing_type === 'RENT' && p.deposit) {
-                    tags.push(`<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Deposit: ${formatPrice(p.deposit)}</span>`);
-                }
-                
+                const editUrl = `/static/add_update.html?id=${recordId}&context=${currentSearchContext}`;
+
                 const resultCard = `
-                    <div class="p-4 sm:p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
-                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                    <div class="p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
+                        <div class="flex justify-between items-start">
                             <div class="flex-1">
-                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800 break-words">${title}</h3>
-                                <p class="text-xs sm:text-sm text-gray-500 mt-1">ID: ${propertyId}</p>
+                                <h3 class="text-xl font-bold text-indigo-800">${title}</h3>
+                                <p class="text-xs text-gray-500 mt-1">ID: ${recordId}</p>
                             </div>
-                            <div class="text-left sm:text-right">
-                                <p class="text-xl sm:text-2xl font-extrabold text-green-600">${price}</p>
-                                <div class="flex flex-wrap gap-1 mt-1 justify-start sm:justify-end">
-                                    ${listingBadge}
-                                    ${p.property_type ? `<span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded">${p.property_type}</span>` : ''}
-                                </div>
+                            <div class="text-right">
+                                <p class="text-lg font-extrabold ${isSupply ? 'text-green-600' : 'text-purple-600'}">${mainPrice}</p>
+                                <div class="mt-1">${listingBadge}</div>
                             </div>
                         </div>
                         
-                        <div class="space-y-2 text-sm sm:text-base">
-                            <p class="text-gray-700">📍 <strong>${locality}</strong></p>
-                            ${specs.length > 0 ? `
-                                <div class="flex flex-wrap gap-3 text-gray-700">
-                                    ${specs.join('')}
-                                </div>
-                            ` : '<p class="text-gray-500 text-sm">Specifications not available</p>'}
-                            
-                            ${p.facing_direction ? `<p class="text-gray-600 text-sm">🧭 Facing: ${p.facing_direction}</p>` : ''}
-                            
-                            ${tags.length > 0 ? `
-                                <div class="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-600">
-                                    ${tags.join('')}
-                                </div>
-                            ` : ''}
-                            
-                            ${p.overlooking && Array.isArray(p.overlooking) && p.overlooking.length > 0 ? `
-                                <p class="text-sm text-gray-600">🌳 Views: ${p.overlooking.join(', ')}</p>
-                            ` : ''}
-                            
-                            ${p.additional_rooms && Array.isArray(p.additional_rooms) && p.additional_rooms.length > 0 ? `
-                                <p class="text-sm text-gray-600">➕ Extra: ${p.additional_rooms.join(', ')}</p>
-                            ` : ''}
-                            
-                            ${p.description ? `<p class="text-sm text-gray-600 mt-2 line-clamp-2">${p.description}</p>` : ''}
-                        </div>
+                        <p class="text-gray-600 mt-2">📍 **${p.locality || 'N/A'}**</p>
+                        <p class="text-gray-700 mt-1">${mainSpecs}</p>
                         
-                        <div class="mt-4 flex flex-wrap gap-3 text-sm sm:text-base">
-                            <button onclick="viewProperty('${propertyId}')" class="flex-1 sm:flex-none font-medium text-blue-600 hover:text-blue-700 hover:underline">👁️ View Details</button>
-                            <a href="/static/add_update.html?id=${propertyId}" class="flex-1 sm:flex-none font-medium text-yellow-600 hover:text-yellow-700 hover:underline text-center sm:text-left">✏️ Edit</a>
-                            <button onclick="deleteProperty('${propertyId}')" class="flex-1 sm:flex-none font-medium text-red-600 hover:text-red-700 hover:underline">🗑️ Delete</button>
+                        <p class="text-sm text-gray-500 mt-3">
+                            ${isSupply ? `Seller: ${p.customer_name || 'Unknown'}` : `Requester: ${p.customer_name || 'Unknown'}`} (${customerContact})
+                        </p>
+                        
+                        <div class="mt-4 space-x-3">
+                             <a href="${editUrl}" class="text-sm font-medium text-yellow-600 hover:text-yellow-700">✏️ Edit</a>
+                             <button onclick="deleteRecord('${recordId}', '${currentSearchContext}')" class="text-sm font-medium text-red-600 hover:text-red-700">🗑️ Delete</button>
                         </div>
                     </div>
                 `;
@@ -293,217 +205,91 @@
             });
         }
 
-        async function listAllProperties() {
-            statusMessage.textContent = 'Fetching all properties...';
+        async function listAll() {
+            const endpoint = currentSearchContext; // 'supply' or 'demand'
+            statusMessage.textContent = `Fetching all ${endpoint} records...`;
             statusMessage.style.display = 'block';
             resultsContainer.innerHTML = '';
-            resultCount.textContent = '';
-            
             try {
-                const res = await fetch(`${BASE_URL}/?size=50`);
+                const res = await fetch(`${BASE_URL}/${endpoint}/?size=50`);
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 renderResults(data);
             } catch (error) {
-                statusMessage.textContent = `Error listing properties: ${error.message}`;
+                statusMessage.textContent = `Error listing records: ${error.message}`;
                 statusMessage.className = 'text-red-500 font-semibold';
             }
         }
 
-        async function searchProperties() {
+        async function search() {
+            const endpoint = currentSearchContext;
             const params = new URLSearchParams();
             
-            const fields = [
-                "locality", "keywords", "title_keywords", 
-                "listing_type", "property_type", "furnishing_status",
-                "bhk", "total_floors",
-                "min_sqft", "max_sqft", "min_price", "max_price",
-                "has_lift"
-            ];
-
-            fields.forEach(f => {
+            // 1. Shared Filters
+            const sharedFields = ["locality", "keywords", "title_keywords", "property_type", "listing_type", "furnishing_status"];
+            sharedFields.forEach(f => {
                 const value = document.getElementById(f).value;
                 if (value !== "") params.append(f, value);
             });
 
-            statusMessage.textContent = 'Searching properties...';
+            // 2. Contextual Filters (Read dynamically generated fields)
+            if (endpoint === 'supply') {
+                const supplyFields = ["bhk", "min_sqft", "max_sqft", "min_price", "max_price", "has_lift"];
+                supplyFields.forEach(f => {
+                    const element = document.getElementById(f);
+                    const value = element ? element.value : '';
+                    if (value !== "") params.append(f, value);
+                });
+            } else {
+                const demandFields = ["bhk_min", "bhk_max", "area_sqft_min", "area_sqft_max", "price_min", "price_max", "has_lift"];
+                 demandFields.forEach(f => {
+                    const element = document.getElementById(f);
+                    const value = element ? element.value : '';
+                    if (value !== "") params.append(f, value);
+                });
+            }
+
+            statusMessage.textContent = `Searching ${endpoint} index...`;
             statusMessage.style.display = 'block';
             resultsContainer.innerHTML = '';
-            resultCount.textContent = '';
 
             try {
-                const url = `${BASE_URL}/search/?${params.toString()}`;
+                const url = `${BASE_URL}/search/${endpoint}/?${params.toString()}`;
                 const res = await fetch(url);
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 renderResults(data);
             } catch (error) {
-                statusMessage.textContent = `Error searching properties: ${error.message}`;
+                statusMessage.textContent = `Error searching records: ${error.message}`;
                 statusMessage.className = 'text-red-500 font-semibold';
             }
         }
         
-        async function deleteProperty(propertyId) {
-            if (!confirm(`Are you sure you want to delete this property?`)) return;
+        async function deleteRecord(recordId, context) {
+            if (!confirm(`Are you sure you want to delete this ${context} record (${recordId})?`)) return;
 
             try {
-                const res = await fetch(`${BASE_URL}/${propertyId}`, { method: 'DELETE' });
+                const res = await fetch(`${BASE_URL}/${context}/${recordId}`, { method: 'DELETE' });
                 if (res.status === 404) {
-                    alert('Property not found.');
+                    alert('Record not found.');
                     return;
                 }
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 
-                alert(`Property deleted successfully.`);
-                
-                const hasFilters = document.getElementById('locality').value || 
-                                  document.getElementById('bhk').value ||
-                                  document.getElementById('listing_type').value ||
-                                  document.getElementById('property_type').value;
-                
-                if (hasFilters) {
-                    searchProperties();
-                } else {
-                    listAllProperties();
-                }
+                alert(`Record deleted successfully.`);
+                listAll();
 
             } catch (error) {
-                alert(`Error deleting property: ${error.message}`);
+                alert(`Error deleting record: ${error.message}`);
             }
         }
 
-        async function viewProperty(propertyId) {
-            try {
-                const res = await fetch(`${BASE_URL}/${propertyId}`);
-                if (!res.ok) throw new Error('Failed to fetch property details');
-                const property = await res.json();
-                
-                // Helper to safely display values
-                const display = (value, fallback = 'Not specified') => {
-                    return (value !== null && value !== undefined && value !== '') ? value : fallback;
-                };
-                
-                // Build grid items dynamically
-                const gridItems = [
-                    property.listing_type ? `<div><span class="font-semibold">Listing Type:</span> <span class="px-2 py-1 ${property.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} rounded text-sm">${property.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span></div>` : '',
-                    property.property_type ? `<div><span class="font-semibold">Type:</span> ${property.property_type}</div>` : '',
-                    property.locality ? `<div><span class="font-semibold">Locality:</span> ${property.locality}</div>` : '',
-                    property.bhk ? `<div><span class="font-semibold">BHK:</span> ${property.bhk}</div>` : '',
-                    property.bathrooms ? `<div><span class="font-semibold">Bathrooms:</span> ${property.bathrooms}</div>` : '',
-                    property.area_sqft ? `<div><span class="font-semibold">Area:</span> ${property.area_sqft} sqft</div>` : '',
-                    property.facing_direction ? `<div><span class="font-semibold">Facing:</span> ${property.facing_direction}</div>` : '',
-                    (property.floor_number || property.total_floors) ? `<div><span class="font-semibold">Floor:</span> ${display(property.floor_number, '?')}${property.total_floors ? ` / ${property.total_floors}` : ''}</div>` : '',
-                    property.furnishing_status ? `<div><span class="font-semibold">Furnishing:</span> ${property.furnishing_status}</div>` : '',
-                    (property.lift_available !== null && property.lift_available !== undefined) ? `<div><span class="font-semibold">Lift:</span> ${property.lift_available ? 'Yes' : 'No'}</div>` : '',
-                    property.age_of_building ? `<div><span class="font-semibold">Age:</span> ${property.age_of_building} years</div>` : '',
-                    (property.listing_type === 'RENT' && property.deposit) ? `<div><span class="font-semibold">Deposit:</span> ${formatPrice(property.deposit)}</div>` : '',
-                    property.listed_date ? `<div><span class="font-semibold">Listed:</span> ${new Date(property.listed_date).toLocaleDateString()}</div>` : ''
-                ].filter(item => item !== '');
-                
-                // Build seller info dynamically
-                const hasSellerInfo = property.seller_name || property.seller_email || property.seller_phone || 
-                                     property.seller_address || property.seller_referred_by || property.seller_additional_info;
-                
-                const sellerItems = [
-                    property.seller_name ? `<div><span class="font-semibold">Name:</span> ${property.seller_name}</div>` : '',
-                    property.seller_email ? `<div><span class="font-semibold">Email:</span> <a href="mailto:${property.seller_email}" class="text-blue-600 hover:underline">${property.seller_email}</a></div>` : '',
-                    property.seller_phone ? `<div><span class="font-semibold">Phone:</span> <a href="tel:${property.seller_phone}" class="text-blue-600 hover:underline">${property.seller_phone}</a></div>` : '',
-                    property.seller_referred_by ? `<div><span class="font-semibold">Referred By:</span> ${property.seller_referred_by}</div>` : '',
-                    property.seller_address ? `<div class="col-span-full"><span class="font-semibold">Address:</span> ${property.seller_address}</div>` : '',
-                    property.seller_additional_info ? `<div class="col-span-full"><span class="font-semibold">Notes:</span> ${property.seller_additional_info}</div>` : ''
-                ].filter(item => item !== '');
-                
-                modalContent.innerHTML = `
-                    <div class="space-y-4 sm:space-y-6">
-                        <div>
-                            <h3 class="text-2xl sm:text-3xl font-bold text-indigo-800 mb-2">${display(property.title, 'Untitled Property')}</h3>
-                            <p class="text-2xl sm:text-3xl font-extrabold text-green-600">${property.price ? formatPrice(property.price) : 'Price not specified'}</p>
-                        </div>
-                        
-                        ${gridItems.length > 0 ? `
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                                ${gridItems.join('')}
-                            </div>
-                        ` : '<p class="text-gray-500 p-4 bg-gray-50 rounded-lg">Property details not available</p>'}
-                        
-                        ${property.description ? `
-                            <div>
-                                <h4 class="font-semibold text-lg mb-2">Description</h4>
-                                <p class="text-gray-700">${property.description}</p>
-                            </div>
-                        ` : ''}
-                        
-                        ${property.overlooking && Array.isArray(property.overlooking) && property.overlooking.length > 0 ? `
-                            <div>
-                                <h4 class="font-semibold text-lg mb-2">Overlooking Views</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    ${property.overlooking.map(view => `<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">${view}</span>`).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                        
-                        ${property.additional_rooms && Array.isArray(property.additional_rooms) && property.additional_rooms.length > 0 ? `
-                            <div>
-                                <h4 class="font-semibold text-lg mb-2">Additional Rooms</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    ${property.additional_rooms.map(room => `<span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">${room}</span>`).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                        
-                        ${property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0 ? `
-                            <div>
-                                <h4 class="font-semibold text-lg mb-2">Amenities</h4>
-                                <div class="flex flex-wrap gap-2">
-                                    ${property.amenities.map(amenity => `<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">${amenity}</span>`).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-                        
-                        ${hasSellerInfo ? `
-                            <div class="border-t pt-4">
-                                <h4 class="font-semibold text-lg mb-3">Seller Information</h4>
-                                ${sellerItems.length > 0 ? `
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                                        ${sellerItems.join('')}
-                                    </div>
-                                ` : '<p class="text-gray-500 text-sm">No seller information available</p>'}
-                            </div>
-                        ` : ''}
-                        
-                        <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                            <a href="/static/add_update.html?id=${propertyId}" class="flex-1 bg-yellow-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition duration-150 text-center">✏️ Edit Property</a>
-                            <button onclick="deleteProperty('${propertyId}')" class="flex-1 bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition duration-150">🗑️ Delete Property</button>
-                        </div>
-                    </div>
-                `;
-                
-                detailModal.classList.remove('hidden');
-            } catch (error) {
-                alert(`Error loading property details: ${error.message}`);
-            }
-        }
-
-        function closeModal() {
-            detailModal.classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        detailModal.addEventListener('click', (e) => {
-            if (e.target === detailModal) {
-                closeModal();
-            }
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSpecFields(); // Render default 'supply' fields
+            setSearchContext('supply');
+            listAll();
         });
-
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && !detailModal.classList.contains('hidden')) {
-                closeModal();
-            }
-        });
-        
-        // Initial load
-        document.addEventListener('DOMContentLoaded', listAllProperties);
     </script>
 
 </body>

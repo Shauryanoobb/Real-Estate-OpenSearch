@@ -1,63 +1,108 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, ARRAY, Enum
 from sqlalchemy.orm import declarative_base
 from typing import Optional, List
-import uuid # Needed for default factory, assuming this import exists nearby
+import uuid 
 
-#this script doesnt overwrite , so first drop table
-# Base for SQLAlchemy models
 Base = declarative_base()
 
-# --- 1. SQL Property Model (Source of Truth - Single Table) ---
-class SQLProperty(Base):
-    __tablename__ = "properties2"
+# --- 1. SQL Supply Model (Inventory) ---
+class SQLSupplyProperty(Base):
+    __tablename__ = "supply_properties" # RENAME existing table
 
-    # Primary key, matching the OpenSearch ID
     id = Column(String, primary_key=True) 
     
+    # Core Fields
     title = Column(String)
+    description = Column(String)
     locality = Column(String)
+    
+    # Numeric/Price
     price = Column(Float)
+    deposit = Column(Float)
     bhk = Column(Integer)
     bathrooms = Column(Integer)
     area_sqft = Column(Integer)
-    
-    # Using SQLAlchemy's Enum type (ensure the values match the Python Enum strings)
-    property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', 'Agricultural Land', 'Industrial Land', name="property_types"))
-    listing_type = Column(Enum('SALE', 'RENT', name="listing_types"))
-    deposit = Column(Float)  # Only for RENT listings, will be NULL for SALE listings
-    description = Column(String)
-    facing_direction = Column(String)
-    
-    # Furnishing Status (Mapped from Python Enum)
-    furnishing_status = Column(Enum('FURNISHED', 'UNFURNISHED', 'SEMI_FURNISHED', name="furnishing_statuses"))
-    
-    # ARRAY fields for multiple selections (PostgreSQL specific)
-    amenities = Column(ARRAY(String)) 
-    images = Column(ARRAY(String)) 
-    overlooking = Column(ARRAY(String))      # Stores List[Overlooking Enum values]
-    additional_rooms = Column(ARRAY(String)) # Stores List[AdditionalRoom Enum values]
-
-    listed_date = Column(String)
     age_of_building = Column(Integer)
-    lift_available = Column(Boolean)
     floor_number = Column(Integer)
     total_floors = Column(Integer)
     
-    # --- Flattened Customer/Seller Details (Non-Relational) ---
-    seller_name = Column(String)
-    seller_email = Column(String)
-    seller_phone = Column(String)
-    seller_address = Column(String)
-    seller_referred_by = Column(String)
-    seller_additional_info = Column(String) # Added the new field
+    # Enum Fields
+    property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', 'Agricultural Land', 'Industrial Land', name="property_types"))
+    listing_type = Column(Enum('SALE', 'RENT', name="listing_types"))
+    furnishing_status = Column(Enum('FURNISHED', 'UNFURNISHED', 'SEMI_FURNISHED', name="furnishing_statuses"))
+    
+    # String/Boolean
+    facing_direction = Column(String)
+    listed_date = Column(String)
+    lift_available = Column(Boolean)
+
+    # Array Fields (PostgreSQL specific)
+    amenities = Column(ARRAY(String)) 
+    images = Column(ARRAY(String)) 
+    overlooking = Column(ARRAY(String))
+    additional_rooms = Column(ARRAY(String)) 
+    
+    # Flattened Customer Details
+    customer_name = Column(String)
+    customer_email = Column(String)
+    customer_phone = Column(String)
+    customer_address = Column(String)
+    customer_referred_by = Column(String)
+    customer_additional_info = Column(String)
 
     def to_dict(self):
-        # Convert the SQL object to a dict matching the Pydantic/OpenSearch structure
         data = self.__dict__.copy()
         data['property_id'] = data.pop('id') 
-        data.pop('_sa_instance_state', None) # Remove SQLAlchemy internal metadata
-        
-        # When fetching data from DB, SQLAlchemy Enum values are automatically 
-        # converted back to Python Enum strings if used correctly in Pydantic.
+        data.pop('_sa_instance_state', None)
+        return data
 
+# --- 2. SQL Demand Model (Requests) ---
+class SQLDemandRequest(Base):
+    __tablename__ = "demand_requests" # NEW TABLE
+
+    id = Column(String, primary_key=True) 
+    
+    # Core Fields (Inherited from BaseListing)
+    title = Column(String)
+    description = Column(String)
+    locality = Column(String)
+    
+    # Enum Fields
+    property_type = Column(Enum('Flat', 'Bungalow', 'Plot', 'Office', 'Shop', 'Agricultural Land', 'Industrial Land', name="property_types"))
+    listing_type = Column(Enum('SALE', 'RENT', name="listing_types"))
+    furnishing_status = Column(Enum('FURNISHED', 'UNFURNISHED', 'SEMI_FURNISHED', name="furnishing_statuses"))
+
+    # Range Fields (Min/Max)
+    price_min = Column(Float)
+    price_max = Column(Float)
+    deposit_max = Column(Float)
+    bhk_min = Column(Integer)
+    bhk_max = Column(Integer)
+    area_sqft_min = Column(Integer)
+    area_sqft_max = Column(Integer)
+    
+    # Specific Demand Fields
+    move_in_date = Column(String)
+    
+    # Boolean/Date/Array
+    listed_date = Column(String)
+    lift_available = Column(Boolean)
+    amenities = Column(ARRAY(String)) 
+    overlooking = Column(ARRAY(String))
+    additional_rooms = Column(ARRAY(String))
+    images = Column(ARRAY(String)) 
+
+
+    # Requester Details (Flattened Customer)
+    customer_name = Column(String)
+    customer_email = Column(String)
+    customer_phone = Column(String)
+    customer_address = Column(String)
+    customer_referred_by = Column(String)
+    customer_additional_info = Column(String)
+
+    def to_dict(self):
+        data = self.__dict__.copy()
+        data['request_id'] = data.pop('id') # Using request_id for clarity
+        data.pop('_sa_instance_state', None)
         return data
