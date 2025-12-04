@@ -44,6 +44,7 @@ class BaseListing(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     locality: Optional[str] = None
+    facing_direction: Optional[str] = None
     
     # Enum fields
     property_type: Optional[PropertyType] = None
@@ -77,9 +78,8 @@ class SupplyProperty(BaseListing):
 
     bhk: Optional[int] = None
     area_sqft: Optional[int] = None
+    # these fields are specific to supply properties
     bathrooms: Optional[int] = None
-    
-    facing_direction: Optional[str] = None
     age_of_building: Optional[int] = None
     floor_number: Optional[int] = None
     total_floors: Optional[int] = None
@@ -99,8 +99,3 @@ class DemandRequest(BaseListing):
     bhk_max: Optional[int] = None
     area_sqft_min: Optional[int] = None
     area_sqft_max: Optional[int] = None
-
-    # Additional Demand Fields
-    move_in_date: Optional[str] = None
-    
-    # Customer name remains customer_name from BaseListing

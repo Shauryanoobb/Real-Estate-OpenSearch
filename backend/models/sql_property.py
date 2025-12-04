@@ -81,17 +81,14 @@ class SQLDemandRequest(Base):
     area_sqft_min = Column(Integer)
     area_sqft_max = Column(Integer)
     
-    # Specific Demand Fields
-    move_in_date = Column(String)
-    
     # Boolean/Date/Array
     listed_date = Column(String)
     lift_available = Column(Boolean)
     amenities = Column(ARRAY(String)) 
     overlooking = Column(ARRAY(String))
     additional_rooms = Column(ARRAY(String))
-    images = Column(ARRAY(String)) 
-
+    images = Column(ARRAY(String))
+    facing_direction = Column(String)
 
     # Requester Details (Flattened Customer)
     customer_name = Column(String)

@@ -152,12 +152,15 @@ def update_supply(property_id: str, property_data: SupplyProperty, db: Session =
 # GET /api/search/supply/ 
 #here we perform a very simple query: hard filters on locality, property type, furnishing status, bhk, lift availability
 #and range filters on sqft and price (hard), only soft match on keywords (title, description)
+#add listing type
 @router.get("/search/supply/")
 def search_supply_properties(
     locality: str = None,
     keywords: str = None,
     title_keywords: str = None,
+    listing_type: str = None,
     property_type: str = None, 
+    facing_direction: str = None,
     furnishing_status: str = None,
     bhk: int = None,
     min_sqft: int = None,
@@ -165,6 +168,7 @@ def search_supply_properties(
     min_price: int = None,
     max_price: int = None,
     has_lift: bool = None,
+    customer_name: str = None,
     size: int = 10
 ):
     query = {"bool": {"must": [], "should": [], "filter": []}}
@@ -179,6 +183,9 @@ def search_supply_properties(
     if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})
     if bhk: query["bool"]["filter"].append({"term": {"bhk": bhk}})
     if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
+    if listing_type: query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
+    if facing_direction: query["bool"]["filter"].append({"term": {"facing_direction": facing_direction}})
+    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}}) #move away from keyword
 
     # Range Filters
     if min_sqft or max_sqft:
@@ -382,6 +389,9 @@ def search_demand_requests(
     title_keywords: str = None,
     property_type: str = None, 
     furnishing_status: str = None,
+    customer_name: str = None,
+    listing_type: str = None,
+    facing_direction: str = None,
     # Demand-specific search parameters
     bhk_min: int = None,
     bhk_max: int = None,
@@ -403,6 +413,9 @@ def search_demand_requests(
     if property_type: query["bool"]["filter"].append({"term": {"property_type": property_type}})
     if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})
     if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
+    if listing_type: query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
+    if facing_direction: query["bool"]["filter"].append({"term": {"facing_direction": facing_direction}})
+    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}})
 
     # --- Range Filters (Demand uses Min/Max fields) ---
     

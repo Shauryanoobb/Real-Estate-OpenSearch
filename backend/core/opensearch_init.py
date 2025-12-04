@@ -4,7 +4,7 @@ import time
 
 INDEX_SUPPLY = "supply_properties"
 INDEX_DEMAND = "demand_requests"
-
+#set up customer name with same settings for fuzzy search
 # --- 1. Base Settings (Common to both indices) ---
 ANALYSIS_SETTINGS = {
     "analysis": {

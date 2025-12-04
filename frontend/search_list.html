@@ -6,13 +6,13 @@
     <title>Property Search & List</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-6">
+<body class="bg-gray-50 p-4 sm:p-6">
 
-    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
-        <h1 class="text-3xl font-extrabold text-indigo-700 mb-6 border-b pb-2">🏠 Real Estate Matching Portal</h1>
+    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mb-4 sm:mb-6 border-b pb-2">🏠 Real Estate Matching Portal</h1>
 
         <!-- Context Switcher -->
-        <div class="mb-6 flex space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
+        <div class="mb-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
             <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
                 <input type="radio" name="search_context" value="supply" checked onchange="setSearchContext('supply')" class="text-indigo-600 focus:ring-indigo-500">
                 <span>Search Inventory (Supply)</span>
@@ -23,56 +23,96 @@
             </label>
         </div>
 
-        <div class="mb-8 flex space-x-4">
-            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700 transition duration-150">➕ Add New Listing</a>
-            <button onclick="listAll()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All</button>
+        <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:space-x-4 sm:gap-0">
+            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition duration-150 text-center">➕ Add New Listing</a>
+            <button onclick="listAll()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All</button>
+            <button onclick="toggleFilters()" class="sm:hidden bg-gray-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-700 transition duration-150">🔍 Toggle Filters</button>
         </div>
 
-        <h2 class="text-2xl font-bold text-gray-800 mb-4">Find Listings / Requirements</h2>
-        <div id="filterPanel" class="grid grid-cols-1 md:grid-cols-4 gap-4 bg-indigo-50 p-6 rounded-xl mb-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Find Listings / Requirements</h2>
+        <div id="filterPanel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-indigo-50 p-4 sm:p-6 rounded-xl mb-6 sm:mb-8">
 
             <!-- CORE FILTERS -->
-            <input id="locality" class="p-3 border rounded-lg" placeholder="Locality">
-            <input id="keywords" class="p-3 border rounded-lg" placeholder="Description keywords">
-            <input id="title_keywords" class="p-3 border rounded-lg" placeholder="Title keywords">
-            
-            <select id="property_type" class="p-3 border rounded-lg">
-                <option value="">Property Type</option>
-                <option value="Flat">Flat</option>
-                <option value="Bungalow">Bungalow</option>
-                <option value="Plot">Plot</option>
-                <option value="Office">Office</option>
-                <option value="Shop">Shop</option>
-                <option value="Agricultural Land">Agricultural Land</option>
-                <option value="Industrial Land">Industrial Land</option>
-            </select>
-            
-            <select id="listing_type" class="p-3 border rounded-lg">
-                <option value="">Listing Type</option>
-                <option value="SALE">Sale</option>
-                <option value="RENT">Rent</option>
-            </select>
-
-            <select id="furnishing_status" class="p-3 border rounded-lg">
-                <option value="">Furnishing Status</option>
-                <option value="FURNISHED">FURNISHED</option>
-                <option value="SEMI_FURNISHED">SEMI-FURNISHED</option>
-                <option value="UNFURNISHED">UNFURNISHED</option>
-            </select>
-
-            <!-- DYNAMIC SPECIFICATION INPUTS CONTAINER -->
-            <div id="spec_fields" class="col-span-full grid grid-cols-4 gap-4">
-                <!-- Content injected here by JavaScript (e.g., price, bhk, sqft inputs) -->
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Locality</label>
+                <input id="locality" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search by locality">
             </div>
             
-            <button onclick="search()" class="col-span-full md:col-span-2 bg-indigo-600 text-white p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">
-                Search
-            </button>
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Customer Name</label>
+                <input id="customer_name" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search by customer name">
+            </div>
+            
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Keywords</label>
+                <input id="keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Description keywords">
+            </div>
+            
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Title Keywords</label>
+                <input id="title_keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Title keywords">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Property Type</label>
+                <select id="property_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">All Types</option>
+                    <option value="Flat">Flat</option>
+                    <option value="Bungalow">Bungalow</option>
+                    <option value="Plot">Plot</option>
+                    <option value="Office">Office</option>
+                    <option value="Shop">Shop</option>
+                    <option value="Agricultural Land">Agricultural Land</option>
+                    <option value="Industrial Land">Industrial Land</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Listing Type</label>
+                <select id="listing_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">All</option>
+                    <option value="SALE">Sale</option>
+                    <option value="RENT">Rent</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Facing Direction</label>
+                <input id="facing_direction" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="e.g., North">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Furnishing</label>
+                <select id="furnishing_status" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">Any</option>
+                    <option value="FURNISHED">FURNISHED</option>
+                    <option value="SEMI_FURNISHED">SEMI-FURNISHED</option>
+                    <option value="UNFURNISHED">UNFURNISHED</option>
+                </select>
+            </div>
+
+            <!-- DYNAMIC SPECIFICATION INPUTS CONTAINER -->
+            <div id="spec_fields" class="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Content injected here by JavaScript -->
+            </div>
+            
+            <div class="col-span-full flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2">
+                <button onclick="search()" class="flex-1 bg-indigo-600 text-white p-2.5 sm:p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 text-sm sm:text-base">
+                    🔍 Search
+                </button>
+                <button onclick="clearFilters()" class="flex-1 sm:flex-none bg-gray-500 text-white px-4 sm:px-6 py-2.5 sm:p-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-150 text-sm sm:text-base">
+                    Clear Filters
+                </button>
+            </div>
         </div>
 
-        <h2 class="text-2xl font-bold text-gray-800 mt-6 mb-4" id="listing_header">Inventory Listings:</h2>
-        <div id="results" class="space-y-6">
-            <p class="text-gray-500" id="status_message">Select a context and start searching.</p>
+        <div class="flex justify-between items-center mb-3 sm:mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800" id="listing_header">Inventory Listings</h2>
+            <span id="result_count" class="text-sm sm:text-base text-gray-600"></span>
+        </div>
+        
+        <div id="results" class="space-y-4 sm:space-y-6">
+            <p class="text-gray-500 text-sm sm:text-base" id="status_message">Select a context and start searching.</p>
         </div>
     </div>
 
@@ -82,8 +122,14 @@
 
         const resultsContainer = document.getElementById("results");
         const statusMessage = document.getElementById("status_message");
+        const resultCount = document.getElementById("result_count");
         const specFieldsContainer = document.getElementById("spec_fields");
         const listingHeader = document.getElementById("listing_header");
+
+        function toggleFilters() {
+            const panel = document.getElementById('filterPanel');
+            panel.classList.toggle('hidden');
+        }
 
         function formatPrice(price) {
             if (!price) return 'N/A';
@@ -95,39 +141,93 @@
             return `₹${price.toLocaleString('en-IN')}`;
         }
         
+        function clearFilters() {
+            document.getElementById('locality').value = '';
+            document.getElementById('customer_name').value = '';
+            document.getElementById('keywords').value = '';
+            document.getElementById('title_keywords').value = '';
+            document.getElementById('property_type').value = '';
+            document.getElementById('listing_type').value = '';
+            document.getElementById('facing_direction').value = '';
+            document.getElementById('furnishing_status').value = '';
+            
+            // Clear dynamic fields
+            const dynamicFields = specFieldsContainer.querySelectorAll('input, select');
+            dynamicFields.forEach(field => field.value = '');
+        }
+        
         function renderSpecFields() {
             specFieldsContainer.innerHTML = '';
             
             if (currentSearchContext === 'supply') {
-                listingHeader.textContent = 'Inventory Listings:';
+                listingHeader.textContent = 'Inventory Listings';
                 // Fields for Supply Search (Exact or Min/Max)
                 specFieldsContainer.innerHTML = `
-                    <input id="bhk" type="number" class="p-3 border rounded-lg" placeholder="BHK (Exact)">
-                    <input id="min_sqft" type="number" class="p-3 border rounded-lg" placeholder="Min Sqft">
-                    <input id="max_sqft" type="number" class="p-3 border rounded-lg" placeholder="Max Sqft">
-                    <input id="min_price" type="number" class="p-3 border rounded-lg" placeholder="Min Price">
-                    <input id="max_price" type="number" class="p-3 border rounded-lg" placeholder="Max Price">
-                    <select id="has_lift" class="p-3 border rounded-lg">
-                        <option value="">Lift Available?</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK</label>
+                        <input id="bhk" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="BHK">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Min Area (sqft)</label>
+                        <input id="min_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Max Area (sqft)</label>
+                        <input id="max_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Min Price (₹)</label>
+                        <input id="min_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Max Price (₹)</label>
+                        <input id="max_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift Available?</label>
+                        <select id="has_lift" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                            <option value="">Any</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
                 `;
             } else {
-                listingHeader.textContent = 'Demand Requests:';
+                listingHeader.textContent = 'Demand Requests';
                 // Fields for Demand Search (Min/Max Ranges)
                 specFieldsContainer.innerHTML = `
-                    <input id="bhk_min" type="number" class="p-3 border rounded-lg" placeholder="BHK Min">
-                    <input id="bhk_max" type="number" class="p-3 border rounded-lg" placeholder="BHK Max">
-                    <input id="area_sqft_min" type="number" class="p-3 border rounded-lg" placeholder="Area Min">
-                    <input id="area_sqft_max" type="number" class="p-3 border rounded-lg" placeholder="Area Max">
-                    <input id="price_min" type="number" class="p-3 border rounded-lg" placeholder="Budget Min">
-                    <input id="price_max" type="number" class="p-3 border rounded-lg" placeholder="Budget Max">
-                    <select id="has_lift" class="p-3 border rounded-lg">
-                        <option value="">Lift Required?</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK Min</label>
+                        <input id="bhk_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK Max</label>
+                        <input id="bhk_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Area Min (sqft)</label>
+                        <input id="area_sqft_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Area Max (sqft)</label>
+                        <input id="area_sqft_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Budget Min (₹)</label>
+                        <input id="price_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Budget Max (₹)</label>
+                        <input id="price_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift Required?</label>
+                        <select id="has_lift" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                            <option value="">Any</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
                 `;
             }
         }
@@ -136,6 +236,7 @@
             currentSearchContext = context;
             renderSpecFields(); // Re-render inputs for the new context
             resultsContainer.innerHTML = ''; // Clear results
+            resultCount.textContent = '';
             statusMessage.textContent = `Ready to search the ${context} index.`;
             statusMessage.style.display = 'block';
         }
@@ -145,9 +246,13 @@
             statusMessage.style.display = 'none';
 
             if (!data.hits || data.hits.hits.length === 0) {
-                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold">No records found matching your criteria.</p>';
+                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold text-sm sm:text-base">No records found matching your criteria.</p>';
+                resultCount.textContent = '0 records';
                 return;
             }
+
+            const count = data.hits.hits.length;
+            resultCount.textContent = `${count} ${count === 1 ? 'record' : 'records'} found`;
 
             const isSupply = currentSearchContext === 'supply';
             
@@ -165,39 +270,45 @@
                 // Determine main specs display based on context
                 const mainSpecs = isSupply
                     ? `${p.bhk || '?'} BHK • ${p.area_sqft || '?'} sqft`
-                    : `BHK: ${p.bhk_min || 'Any'} to ${p.bhk_max || 'Any'} • Area: ${p.area_sqft_min || 'Any'} sqft`;
+                    : `BHK: ${p.bhk_min || 'Any'} to ${p.bhk_max || 'Any'} • Area: ${p.area_sqft_min || 'Any'} - ${p.area_sqft_max || 'Any'} sqft`;
                 
                 const listingBadge = p.listing_type 
-                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type}</span>`
+                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span>`
                     : '';
                 
-                const customerContact = p.customer_email || p.customer_phone || p.customer_name || 'N/A';
+                const facingInfo = p.facing_direction ? `🧭 ${p.facing_direction}` : '';
+                const customerContact = p.customer_email || p.customer_phone || '';
+                const customerInfo = p.customer_name ? `${p.customer_name}${customerContact ? ` (${customerContact})` : ''}` : 'Unknown';
                 
                 const editUrl = `/static/add_update.html?id=${recordId}&context=${currentSearchContext}`;
 
                 const resultCard = `
-                    <div class="p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
-                        <div class="flex justify-between items-start">
+                    <div class="p-4 sm:p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
                             <div class="flex-1">
-                                <h3 class="text-xl font-bold text-indigo-800">${title}</h3>
-                                <p class="text-xs text-gray-500 mt-1">ID: ${recordId}</p>
+                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800 break-words">${title}</h3>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">ID: ${recordId}</p>
                             </div>
-                            <div class="text-right">
-                                <p class="text-lg font-extrabold ${isSupply ? 'text-green-600' : 'text-purple-600'}">${mainPrice}</p>
-                                <div class="mt-1">${listingBadge}</div>
+                            <div class="text-left sm:text-right">
+                                <p class="text-lg sm:text-xl font-extrabold ${isSupply ? 'text-green-600' : 'text-purple-600'}">${mainPrice}</p>
+                                ${listingBadge ? `<div class="mt-1">${listingBadge}</div>` : ''}
                             </div>
                         </div>
                         
-                        <p class="text-gray-600 mt-2">📍 **${p.locality || 'N/A'}**</p>
-                        <p class="text-gray-700 mt-1">${mainSpecs}</p>
+                        <div class="space-y-2 text-sm sm:text-base">
+                            <p class="text-gray-700">📍 <strong>${p.locality || 'N/A'}</strong> ${facingInfo}</p>
+                            <p class="text-gray-700">${mainSpecs}</p>
+                            
+                            <p class="text-sm text-gray-600 mt-2">
+                                ${isSupply ? 'Seller' : 'Requester'}: <strong>${customerInfo}</strong>
+                            </p>
+                            
+                            ${p.description ? `<p class="text-sm text-gray-600 mt-2 line-clamp-2">${p.description}</p>` : ''}
+                        </div>
                         
-                        <p class="text-sm text-gray-500 mt-3">
-                            ${isSupply ? `Seller: ${p.customer_name || 'Unknown'}` : `Requester: ${p.customer_name || 'Unknown'}`} (${customerContact})
-                        </p>
-                        
-                        <div class="mt-4 space-x-3">
-                             <a href="${editUrl}" class="text-sm font-medium text-yellow-600 hover:text-yellow-700">✏️ Edit</a>
-                             <button onclick="deleteRecord('${recordId}', '${currentSearchContext}')" class="text-sm font-medium text-red-600 hover:text-red-700">🗑️ Delete</button>
+                        <div class="mt-4 flex flex-wrap gap-3 text-sm sm:text-base">
+                            <a href="${editUrl}" class="flex-1 sm:flex-none font-medium text-yellow-600 hover:text-yellow-700 hover:underline text-center sm:text-left">✏️ Edit</a>
+                            <button onclick="deleteRecord('${recordId}', '${currentSearchContext}')" class="flex-1 sm:flex-none font-medium text-red-600 hover:text-red-700 hover:underline">🗑️ Delete</button>
                         </div>
                     </div>
                 `;
@@ -210,6 +321,8 @@
             statusMessage.textContent = `Fetching all ${endpoint} records...`;
             statusMessage.style.display = 'block';
             resultsContainer.innerHTML = '';
+            resultCount.textContent = '';
+            
             try {
                 const res = await fetch(`${BASE_URL}/${endpoint}/?size=50`);
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -226,9 +339,13 @@
             const params = new URLSearchParams();
             
             // 1. Shared Filters
-            const sharedFields = ["locality", "keywords", "title_keywords", "property_type", "listing_type", "furnishing_status"];
+            const sharedFields = [
+                "locality", "customer_name", "keywords", "title_keywords", 
+                "property_type", "listing_type", "facing_direction", "furnishing_status"
+            ];
             sharedFields.forEach(f => {
-                const value = document.getElementById(f).value;
+                const element = document.getElementById(f);
+                const value = element ? element.value : '';
                 if (value !== "") params.append(f, value);
             });
 
@@ -242,7 +359,7 @@
                 });
             } else {
                 const demandFields = ["bhk_min", "bhk_max", "area_sqft_min", "area_sqft_max", "price_min", "price_max", "has_lift"];
-                 demandFields.forEach(f => {
+                demandFields.forEach(f => {
                     const element = document.getElementById(f);
                     const value = element ? element.value : '';
                     if (value !== "") params.append(f, value);
@@ -252,6 +369,7 @@
             statusMessage.textContent = `Searching ${endpoint} index...`;
             statusMessage.style.display = 'block';
             resultsContainer.innerHTML = '';
+            resultCount.textContent = '';
 
             try {
                 const url = `${BASE_URL}/search/${endpoint}/?${params.toString()}`;
