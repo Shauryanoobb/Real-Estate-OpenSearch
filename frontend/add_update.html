@@ -11,8 +11,8 @@
     <div class="max-w-4xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
         <h1 id="form_title" class="text-2xl sm:text-3xl font-extrabold text-green-700 mb-4 sm:mb-6 border-b pb-2">➕ Add New Listing</h1>
         
-        <!-- Context Switcher -->
-        <div class="mb-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
+        <!-- Context Switcher (Hidden in Update Mode) -->
+        <div id="context_switcher" class="mb-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
             <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
                 <input type="radio" name="listing_context" value="supply" checked onchange="setContext('supply')" class="text-indigo-600 focus:ring-indigo-500">
                 <span>Supply (New Inventory)</span>
@@ -509,8 +509,11 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             setContext('supply');
-            
+
             if (propertyIdParam) {
+                // Update mode - hide context switcher
+                document.getElementById('context_switcher').classList.add('hidden');
+
                 const contextFromUrl = urlParams.get('context') || 'supply';
                 currentContext = contextFromUrl;
                 document.querySelector(`input[name="listing_context"][value="${currentContext}"]`).checked = true;
@@ -521,7 +524,7 @@
 
                 const fetchUrl = `${BASE_URL}/${currentContext}/${propertyIdParam}`;
                 document.getElementById('submit_button').textContent = `🔄 Update ${currentContext.toUpperCase()}`;
-                
+
                 try {
                     const res = await fetch(fetchUrl);
                     if (res.status === 404) {
@@ -537,6 +540,8 @@
                     responseMessage.className = 'mt-6 p-4 bg-red-100 text-red-700 rounded-lg text-center font-medium block';
                 }
             } else {
+                // Add mode - show context switcher, hide ID display
+                document.getElementById('context_switcher').classList.remove('hidden');
                 idDisplayGroup.classList.add('hidden');
             }
         });
