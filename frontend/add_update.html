@@ -243,11 +243,6 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Amenities</label>
                         <input type="text" id="amenities" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Gym, Pool, Park (comma separated)">
                     </div>
-                    
-                    <div class="col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Image URLs</label>
-                        <input type="text" id="images" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="https://example.com/image1.jpg, https://... (comma separated)">
-                    </div>
                 </div>
             </div>
             
@@ -423,7 +418,6 @@
             });
 
             data.amenities = document.getElementById("amenities").value.split(",").map(a => a.trim()).filter(a => a) || [];
-            data.images = document.getElementById("images").value.split(",").map(a => a.trim()).filter(a => a) || [];
             data.overlooking = getMultiSelectValues('overlooking');
             data.additional_rooms = getMultiSelectValues('additional_rooms');
             
@@ -496,7 +490,6 @@
             document.getElementById("lift_available").value = source.lift_available !== undefined && source.lift_available !== null ? source.lift_available.toString() : '';
 
             document.getElementById("amenities").value = Array.isArray(source.amenities) ? source.amenities.join(', ') : '';
-            document.getElementById("images").value = Array.isArray(source.images) ? source.images.join(', ') : '';
             setMultiSelectValues('overlooking', source.overlooking);
             setMultiSelectValues('additional_rooms', source.additional_rooms);
 
