@@ -71,6 +71,7 @@ ANALYSIS_SETTINGS = {
 SUPPLY_MAPPING = {
     "properties": {
       "property_id": { "type": "keyword" },
+      "customer_id": { "type": "keyword" },
       "title": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
       "description": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
       
@@ -119,6 +120,7 @@ SUPPLY_MAPPING = {
 DEMAND_MAPPING = {
     "properties": {
       "property_id": { "type": "keyword" }, # Used as the request ID
+      "customer_id": { "type": "keyword" },
       "title": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
       "description": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
       

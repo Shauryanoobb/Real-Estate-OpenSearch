@@ -38,9 +38,10 @@ class AdditionalRoom(str, Enum):
 
 class BaseListing(BaseModel):
     """Base model containing fields common to both inventory and demand requests."""
-    
+
     # Optional fields for both, but must be present in the DB schema
     property_id: Optional[str] = None
+    customer_id: Optional[str] = None  # User/Owner ID (set automatically by backend)
     title: Optional[str] = None
     description: Optional[str] = None
     locality: Optional[str] = None

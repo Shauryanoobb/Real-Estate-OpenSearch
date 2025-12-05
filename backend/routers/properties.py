@@ -4,8 +4,10 @@ from uuid import uuid4
 import logging
 from ..core.opensearch_client import client
 from ..core.database_client import get_db
-from ..models.property import SupplyProperty, DemandRequest 
-from ..models.sql_property import SQLSupplyProperty, SQLDemandRequest 
+from ..core.auth import get_current_user, get_current_user_id
+from ..models.property import SupplyProperty, DemandRequest
+from ..models.sql_property import SQLSupplyProperty, SQLDemandRequest
+from ..models.user import User 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO) 
@@ -83,13 +85,17 @@ def create_cross_search_query(target_index: str, source_model):
 # --- 1. SUPPLY ENDPOINTS (/api/supply) ---
 
 @router.post("/supply/")
-def add_supply(property_data: SupplyProperty, db: Session = Depends(get_db)):
-    
+def add_supply(
+    property_data: SupplyProperty,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
     new_id = property_data.property_id if property_data.property_id else str(uuid4())
     sql_data = property_data.dict(exclude_none=True)
     sql_data["id"] = new_id
+    sql_data["customer_id"] = current_user.id  # ← Auto-set from authenticated user
     sql_data.pop("property_id", None)
-    
+
     sql_model = SQLSupplyProperty(**sql_data)
     
     try:
@@ -118,10 +124,17 @@ def add_supply(property_data: SupplyProperty, db: Session = Depends(get_db)):
 
 # NEW: Update Supply Property
 @router.put("/supply/{property_id}")
-def update_supply(property_id: str, property_data: SupplyProperty, db: Session = Depends(get_db)):
-    
-    # 1. CHECK & FETCH POSTGRESQL
-    sql_model = db.query(SQLSupplyProperty).filter(SQLSupplyProperty.id == property_id).first()
+def update_supply(
+    property_id: str,
+    property_data: SupplyProperty,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    # 1. CHECK & FETCH POSTGRESQL (with ownership verification)
+    sql_model = db.query(SQLSupplyProperty).filter(
+        SQLSupplyProperty.id == property_id,
+        SQLSupplyProperty.customer_id == current_user.id  # ← Only owner can update
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Supply Property not found in DB")
         
@@ -149,7 +162,7 @@ def update_supply(property_id: str, property_data: SupplyProperty, db: Session =
     return {"result": "Supply updated", "opensearch_id": opensearch_id}
 
 
-# GET /api/search/supply/ 
+# GET /api/search/supply/
 #here we perform a very simple query: hard filters on locality, property type, furnishing status, bhk, lift availability
 #and range filters on sqft and price (hard), only soft match on keywords (title, description)
 #add listing type
@@ -159,7 +172,7 @@ def search_supply_properties(
     keywords: str = None,
     title_keywords: str = None,
     listing_type: str = None,
-    property_type: str = None, 
+    property_type: str = None,
     facing_direction: str = None,
     furnishing_status: str = None,
     bhk: int = None,
@@ -169,15 +182,25 @@ def search_supply_properties(
     max_price: int = None,
     has_lift: bool = None,
     customer_name: str = None,
-    size: int = 10
+    size: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
 ):
+    """
+    Search supply properties for the authenticated user.
+    Automatically filters by customer_id.
+    """
     query = {"bool": {"must": [], "should": [], "filter": []}}
+
+    # ALWAYS filter by authenticated user's customer_id
+    query["bool"]["filter"].append({"term": {"customer_id": current_user.id}})
+
     # --- Standard OpenSearch Query Building (Use INDEX_SUPPLY) ---
-    
+
     if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO"}}})
     if keywords: query["bool"]["should"].append({"match": {"description": {"query": keywords, "boost": 2}}})
     if title_keywords: query["bool"]["should"].append({"match": {"title": {"query": title_keywords, "boost": 3}}})
-    
+
     # Term Filters
     if property_type: query["bool"]["filter"].append({"term": {"property_type": property_type}})
     if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})
@@ -185,7 +208,7 @@ def search_supply_properties(
     if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
     if listing_type: query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
     if facing_direction: query["bool"]["filter"].append({"term": {"facing_direction": facing_direction}})
-    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}}) #move away from keyword
+    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}})
 
     # Range Filters
     if min_sqft or max_sqft:
@@ -208,11 +231,15 @@ def search_supply_properties(
 # --- 2. DEMAND ENDPOINTS (/api/demand) ---
 
 @router.post("/demand/")
-def add_demand(request_data: DemandRequest, db: Session = Depends(get_db)):
-    
+def add_demand(
+    request_data: DemandRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
     new_id = request_data.property_id if request_data.property_id else str(uuid4()) # Using property_id slot for request ID
     sql_data = request_data.dict(exclude_none=True)
     sql_data["id"] = new_id
+    sql_data["customer_id"] = current_user.id  # ← Auto-set from authenticated user
     sql_data.pop("property_id", None) 
     
     sql_model = SQLDemandRequest(**sql_data)
@@ -243,10 +270,17 @@ def add_demand(request_data: DemandRequest, db: Session = Depends(get_db)):
 
 # NEW: Update Demand Property
 @router.put("/demand/{request_id}")
-def update_demand(request_id: str, request_data: DemandRequest, db: Session = Depends(get_db)):
-    
-    # 1. CHECK & FETCH POSTGRESQL
-    sql_model = db.query(SQLDemandRequest).filter(SQLDemandRequest.id == request_id).first()
+def update_demand(
+    request_id: str,
+    request_data: DemandRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    # 1. CHECK & FETCH POSTGRESQL (with ownership verification)
+    sql_model = db.query(SQLDemandRequest).filter(
+        SQLDemandRequest.id == request_id,
+        SQLDemandRequest.customer_id == current_user.id  # ← Only owner can update
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Demand Request not found in DB")
         
@@ -277,36 +311,81 @@ def update_demand(request_id: str, request_data: DemandRequest, db: Session = De
 
 # Get Supply by ID
 @router.get("/supply/{property_id}")
-def get_supply_property(property_id: str, db: Session = Depends(get_db)):
-    sql_model = db.query(SQLSupplyProperty).filter(SQLSupplyProperty.id == property_id).first()
+def get_supply_property(
+    property_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    # Only return if user owns this property
+    sql_model = db.query(SQLSupplyProperty).filter(
+        SQLSupplyProperty.id == property_id,
+        SQLSupplyProperty.customer_id == current_user.id  # ← Ownership check
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Supply Property not found")
     return SupplyProperty(**sql_model.to_dict()) # Return as Pydantic type
 
 # Get Demand by ID
 @router.get("/demand/{request_id}")
-def get_demand_request(request_id: str, db: Session = Depends(get_db)):
-    sql_model = db.query(SQLDemandRequest).filter(SQLDemandRequest.id == request_id).first()
+def get_demand_request(
+    request_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    # Only return if user owns this request
+    sql_model = db.query(SQLDemandRequest).filter(
+        SQLDemandRequest.id == request_id,
+        SQLDemandRequest.customer_id == current_user.id  # ← Ownership check
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Demand Request not found")
     return DemandRequest(**sql_model.to_dict()) # Return as Pydantic type
 
 # Get All Supply
 @router.get("/supply/")
-def get_all_supply(size: int = 10):
-    response = client.search(index=INDEX_SUPPLY, body={"query": {"match_all": {}}, "size": size})
+def get_all_supply(
+    size: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    """
+    Get all supply properties for the authenticated user.
+    Automatically filters by customer_id.
+    """
+    # Always filter by authenticated user's customer_id
+    query = {"bool": {"filter": [{"term": {"customer_id": current_user.id}}]}}
+
+    response = client.search(index=INDEX_SUPPLY, body={"query": query, "size": size})
     return response
 
 # Get All Demand
 @router.get("/demand/")
-def get_all_demand(size: int = 10):
-    response = client.search(index=INDEX_DEMAND, body={"query": {"match_all": {}}, "size": size})
+def get_all_demand(
+    size: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    """
+    Get all demand requests for the authenticated user.
+    Automatically filters by customer_id.
+    """
+    # Always filter by authenticated user's customer_id
+    query = {"bool": {"filter": [{"term": {"customer_id": current_user.id}}]}}
+
+    response = client.search(index=INDEX_DEMAND, body={"query": query, "size": size})
     return response
 
 # Delete Supply
 @router.delete("/supply/{property_id}")
-def delete_supply(property_id: str, db: Session = Depends(get_db)):
-    sql_model = db.query(SQLSupplyProperty).filter(SQLSupplyProperty.id == property_id).first()
+def delete_supply(
+    property_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    sql_model = db.query(SQLSupplyProperty).filter(
+        SQLSupplyProperty.id == property_id,
+        SQLSupplyProperty.customer_id == current_user.id  # ← Only owner can delete
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Supply Property not found")
     try:
@@ -320,8 +399,15 @@ def delete_supply(property_id: str, db: Session = Depends(get_db)):
 
 # Delete Demand
 @router.delete("/demand/{request_id}")
-def delete_demand(request_id: str, db: Session = Depends(get_db)):
-    sql_model = db.query(SQLDemandRequest).filter(SQLDemandRequest.id == request_id).first()
+def delete_demand(
+    request_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
+):
+    sql_model = db.query(SQLDemandRequest).filter(
+        SQLDemandRequest.id == request_id,
+        SQLDemandRequest.customer_id == current_user.id  # ← Only owner can delete
+    ).first()
     if not sql_model:
         raise HTTPException(status_code=404, detail="Demand Request not found")
     try:
@@ -333,61 +419,14 @@ def delete_demand(request_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database or Indexing error during deletion: {e}")
     return {"result": "Demand deleted", "opensearch_response": response.get('result')}
 
-#TERM AND RANGE PERFORM HARD SEARCHES
-# GET /api/search/supply/ 
-@router.get("/search/supply/")
-def search_supply_properties(
-    locality: str = None,
-    keywords: str = None,
-    title_keywords: str = None,
-    property_type: str = None, 
-    furnishing_status: str = None,
-    bhk: int = None,
-    min_sqft: int = None,
-    max_sqft: int = None,
-    min_price: int = None,
-    max_price: int = None,
-    has_lift: bool = None,
-    size: int = 10
-):
-    query = {"bool": {"must": [], "should": [], "filter": []}}
-    # --- Standard OpenSearch Query Building (Use INDEX_SUPPLY) ---
-    
-    if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO"}}})
-    if keywords: query["bool"]["should"].append({"match": {"description": {"query": keywords, "boost": 2}}})
-    if title_keywords: query["bool"]["should"].append({"match": {"title": {"query": title_keywords, "boost": 3}}})
-    
-    # Term Filters
-    if property_type: query["bool"]["filter"].append({"term": {"property_type": property_type}})
-    if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})
-    if bhk: query["bool"]["filter"].append({"term": {"bhk": bhk}})
-    if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
-
-    # Range Filters
-    if min_sqft or max_sqft:
-        sqft_range = {}
-        if min_sqft: sqft_range["gte"] = min_sqft
-        if max_sqft: sqft_range["lte"] = max_sqft
-        query["bool"]["filter"].append({"range": {"area_sqft": sqft_range}})
-
-    if min_price or max_price:
-        price_range = {}
-        if min_price: price_range["gte"] = min_price
-        if max_price: price_range["lte"] = max_price
-        query["bool"]["filter"].append({"range": {"price": price_range}})
-
-    body = {"query": query, "size": size}
-    response = client.search(index=INDEX_SUPPLY, body=body)
-    return response
-
 # GET /api/search/demand/
-#see how to change, and what to remove because most of this will never be searched in demand 
+#see how to change, and what to remove because most of this will never be searched in demand
 @router.get("/search/demand/")
 def search_demand_requests(
     locality: str = None,
     keywords: str = None,
     title_keywords: str = None,
-    property_type: str = None, 
+    property_type: str = None,
     furnishing_status: str = None,
     customer_name: str = None,
     listing_type: str = None,
@@ -400,15 +439,24 @@ def search_demand_requests(
     min_price: int = None,
     max_price: int = None,
     has_lift: bool = None,
-    size: int = 10
+    size: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ← Auth required
 ):
+    """
+    Search demand requests for the authenticated user.
+    Automatically filters by customer_id.
+    """
     query = {"bool": {"must": [], "should": [], "filter": []}}
-    
+
+    # ALWAYS filter by authenticated user's customer_id
+    query["bool"]["filter"].append({"term": {"customer_id": current_user.id}})
+
     # --- Full Text Search ---
     if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO"}}})
     if keywords: query["bool"]["should"].append({"match": {"description": {"query": keywords, "boost": 2}}})
     if title_keywords: query["bool"]["should"].append({"match": {"title": {"query": title_keywords, "boost": 3}}})
-    
+
     # Term Filters
     if property_type: query["bool"]["filter"].append({"term": {"property_type": property_type}})
     if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})

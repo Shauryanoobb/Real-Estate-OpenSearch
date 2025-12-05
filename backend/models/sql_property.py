@@ -9,8 +9,9 @@ Base = declarative_base()
 class SQLSupplyProperty(Base):
     __tablename__ = "supply_properties" # RENAME existing table
 
-    id = Column(String, primary_key=True) 
-    
+    id = Column(String, primary_key=True)
+    customer_id = Column(String, nullable=False, index=True)  # User/Owner ID
+
     # Core Fields
     title = Column(String)
     description = Column(String)
@@ -42,7 +43,7 @@ class SQLSupplyProperty(Base):
     additional_rooms = Column(ARRAY(String)) 
     
     # Flattened Customer Details
-    customer_name = Column(String)
+    customer_name = Column(String) #this is our customer's customer
     customer_email = Column(String)
     customer_phone = Column(String)
     customer_address = Column(String)
@@ -59,8 +60,9 @@ class SQLSupplyProperty(Base):
 class SQLDemandRequest(Base):
     __tablename__ = "demand_requests" # NEW TABLE
 
-    id = Column(String, primary_key=True) 
-    
+    id = Column(String, primary_key=True)
+    customer_id = Column(String, nullable=False, index=True)  # User/Owner ID
+
     # Core Fields (Inherited from BaseListing)
     title = Column(String)
     description = Column(String)

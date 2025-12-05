@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from .routers import properties # Import the properties router
-from fastapi.middleware.cors import CORSMiddleware 
+from .routers import properties, auth  # Import routers
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -28,3 +28,4 @@ async def serve_index():
 
 # Register routers
 app.include_router(properties.router) #gets all the routes from properties.py and includes them in the main app
+app.include_router(auth.router) #gets all the auth routes (signup, login, /me)
