@@ -38,7 +38,6 @@ class SQLSupplyProperty(Base):
 
     # Array Fields (PostgreSQL specific)
     amenities = Column(ARRAY(String)) 
-    images = Column(ARRAY(String)) 
     overlooking = Column(ARRAY(String))
     additional_rooms = Column(ARRAY(String)) 
     
@@ -87,7 +86,6 @@ class SQLDemandRequest(Base):
     amenities = Column(ARRAY(String)) 
     overlooking = Column(ARRAY(String))
     additional_rooms = Column(ARRAY(String))
-    images = Column(ARRAY(String))
     facing_direction = Column(String)
 
     # Requester Details (Flattened Customer)

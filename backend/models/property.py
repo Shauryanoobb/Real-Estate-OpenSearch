@@ -55,7 +55,6 @@ class BaseListing(BaseModel):
     overlooking: Optional[List[Overlooking]] = []
     additional_rooms: Optional[List[AdditionalRoom]] = []
     amenities: Optional[List[str]] = []
-    images: Optional[List[str]] = [] 
 
     listed_date: Optional[str] = None
     lift_available: Optional[bool] = None

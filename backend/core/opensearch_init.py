@@ -100,7 +100,6 @@ SUPPLY_MAPPING = {
       "amenities": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "fuzzy_search_analyzer" } } },
       "overlooking": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       "additional_rooms": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
-      "images": { "type": "keyword" },
       
       "customer_name": { "type": "text" },
       "customer_email": { "type": "keyword" },
@@ -108,7 +107,6 @@ SUPPLY_MAPPING = {
       "customer_address": { "type": "text" },
       "customer_referred_by": { "type": "text" },
       "customer_additional_info": { "type": "text" },
-
       "text_content": {
         "type": "text",
         "analyzer": "fuzzy_search_analyzer",
@@ -148,7 +146,6 @@ DEMAND_MAPPING = {
       "lift_available": { "type": "boolean" },
       "listed_date": { "type": "date", "format": "yyyy-MM-dd" },
       "move_in_date": { "type": "date", "format": "yyyy-MM-dd" }, 
-      
       "amenities": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "fuzzy_search_analyzer" } } },
       "overlooking": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       "additional_rooms": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
