@@ -7,7 +7,7 @@ Handles password hashing, JWT token generation/validation, and user authenticati
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -21,45 +21,42 @@ SECRET_KEY = "your-secret-key-change-in-production-use-env-variable"  # Change t
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 30  # Long-lived tokens as requested
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # HTTP Bearer token scheme
 security = HTTPBearer()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode('utf-8'),
+        hashed_password.encode('utf-8')
+    )
 
 
 def get_password_hash(password: str) -> str:
     """
-    Hash a password
+    Hash a password using bcrypt
 
     Args:
         password: Plain text password
 
     Returns:
-        Hashed password
+        Hashed password string
 
     Raises:
         ValueError: If password exceeds bcrypt's 72 byte limit
     """
-    # Debug logging
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Password type: {type(password)}")
-    logger.info(f"Password length (chars): {len(password)}")
-    logger.info(f"Password length (bytes): {len(password.encode('utf-8'))}")
-    logger.info(f"Password repr: {repr(password)}")
-
     # Bcrypt has a 72-byte limit
-    password_bytes = len(password.encode('utf-8'))
-    if password_bytes > 72:
-        raise ValueError(f"Password is {password_bytes} bytes, exceeds bcrypt's 72 byte limit")
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        raise ValueError(f"Password is {len(password_bytes)} bytes, exceeds bcrypt's 72 byte limit")
 
-    return pwd_context.hash(password)
+    # Hash password with bcrypt
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+
+    # Return as string
+    return hashed.decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
