@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/auth.js"></script>
+</head>
+<body class="bg-gray-50 p-4 sm:p-6">
+
+    <div class="max-w-5xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
+        <!-- Header with User Menu -->
+        <div class="flex justify-between items-center mb-4 pb-4 border-b">
+            <div>
+                <h1 id="property_title" class="text-2xl sm:text-3xl font-extrabold text-indigo-700">Property Details</h1>
+                <p id="property_id_display" class="text-sm text-gray-500 mt-1"></p>
+            </div>
+            <div id="userMenuPlaceholder"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex gap-3 w-full sm:w-auto mb-6">
+            <a href="#" id="edit_button" class="flex-1 sm:flex-none bg-yellow-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-700 transition duration-150 text-center">✏️ Edit</a>
+            <a href="/static/search_list.html" class="flex-1 sm:flex-none bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition duration-150 text-center">← Back</a>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <p class="mt-4 text-gray-600">Loading property details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+            <p class="font-semibold">Error Loading Property</p>
+            <p id="error_message" class="text-sm mt-1"></p>
+        </div>
+
+        <!-- Property Details -->
+        <div id="property_details" class="hidden space-y-6">
+
+            <!-- Core Information -->
+            <div class="border p-4 sm:p-6 rounded-xl bg-gradient-to-br from-indigo-50 to-white">
+                <h2 class="text-xl font-semibold text-indigo-700 mb-4 flex items-center">
+                    <span class="mr-2">🏠</span> Core Information
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Title</label>
+                        <p id="title" class="text-base font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Property Type</label>
+                        <p id="property_type" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Listing Type</label>
+                        <p id="listing_type" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Furnishing Status</label>
+                        <p id="furnishing_status" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div class="col-span-full">
+                        <label class="text-sm font-medium text-gray-600">Description</label>
+                        <p id="description" class="text-base text-gray-700 mt-1 whitespace-pre-wrap">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location & Specifications -->
+            <div class="border p-4 sm:p-6 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-700 mb-4 flex items-center">
+                    <span class="mr-2">📍</span> Location & Specifications
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Locality</label>
+                        <p id="locality" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">BHK</label>
+                        <p id="bhk" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Area (sqft)</label>
+                        <p id="area_sqft" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Bathrooms</label>
+                        <p id="bathrooms" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Facing Direction</label>
+                        <p id="facing_direction" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div id="floor_info_div" class="hidden">
+                        <label class="text-sm font-medium text-gray-600">Floor</label>
+                        <p id="floor_info" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Building Age</label>
+                        <p id="age_of_building" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Lift Available</label>
+                        <p id="lift_available" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Information -->
+            <div class="border p-4 sm:p-6 rounded-xl bg-gradient-to-br from-green-50 to-white">
+                <h2 class="text-xl font-semibold text-green-700 mb-4 flex items-center">
+                    <span class="mr-2">💰</span> Pricing Information
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Price / Budget</label>
+                        <p id="price" class="text-2xl font-bold text-green-600 mt-1">-</p>
+                    </div>
+                    <div id="deposit_div" class="hidden">
+                        <label class="text-sm font-medium text-gray-600">Deposit</label>
+                        <p id="deposit" class="text-xl font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features & Amenities -->
+            <div class="border p-4 sm:p-6 rounded-xl">
+                <h2 class="text-xl font-semibold text-indigo-700 mb-4 flex items-center">
+                    <span class="mr-2">✨</span> Features & Amenities
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Amenities</label>
+                        <div id="amenities" class="mt-2 flex flex-wrap gap-2">
+                            <span class="text-gray-500 text-sm">None specified</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Overlooking</label>
+                        <div id="overlooking" class="mt-2 flex flex-wrap gap-2">
+                            <span class="text-gray-500 text-sm">None specified</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Additional Rooms</label>
+                        <div id="additional_rooms" class="mt-2 flex flex-wrap gap-2">
+                            <span class="text-gray-500 text-sm">None specified</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Listed Date</label>
+                        <p id="listed_date" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer/Contact Details -->
+            <div class="border p-4 sm:p-6 rounded-xl bg-gradient-to-br from-purple-50 to-white">
+                <h2 class="text-xl font-semibold text-purple-700 mb-4 flex items-center">
+                    <span class="mr-2">👤</span> <span id="customer_header">Contact Details</span>
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Name</label>
+                        <p id="customer_name" class="text-base font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Email</label>
+                        <p id="customer_email" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Phone</label>
+                        <p id="customer_phone" class="text-base font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-600">Referred By</label>
+                        <p id="customer_referred_by" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div class="col-span-full">
+                        <label class="text-sm font-medium text-gray-600">Address</label>
+                        <p id="customer_address" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div class="col-span-full">
+                        <label class="text-sm font-medium text-gray-600">Additional Information</label>
+                        <p id="customer_additional_info" class="text-base text-gray-700 mt-1 whitespace-pre-wrap">-</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin + "/api";
+        const urlParams = new URLSearchParams(window.location.search);
+        const propertyId = urlParams.get('id');
+        const context = urlParams.get('context') || 'supply';
+
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const errorMessage = document.getElementById('error_message');
+        const propertyDetails = document.getElementById('property_details');
+
+        function formatCurrency(value) {
+            if (!value && value !== 0) return '-';
+            return '₹' + value.toLocaleString('en-IN');
+        }
+
+        function formatArray(arr) {
+            if (!arr || arr.length === 0) return '<span class="text-gray-500 text-sm">None specified</span>';
+            return arr.map(item =>
+                `<span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm">${item}</span>`
+            ).join('');
+        }
+
+        function displayValue(value, defaultValue = '-') {
+            return value !== null && value !== undefined && value !== '' ? value : defaultValue;
+        }
+
+        async function loadPropertyDetails() {
+            if (!propertyId) {
+                error.classList.remove('hidden');
+                errorMessage.textContent = 'No property ID provided in URL';
+                loading.classList.add('hidden');
+                return;
+            }
+
+            // Require authentication
+            if (!AuthManager.isAuthenticated()) {
+                error.classList.remove('hidden');
+                errorMessage.textContent = 'Please log in to view property details';
+                loading.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const response = await authenticatedFetch(`${BASE_URL}/${context}/${propertyId}`);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load property: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const property = data._source || data;
+
+                // Update page title and header
+                document.title = property.title || 'Property Details';
+                document.getElementById('property_title').textContent = property.title || 'Property Details';
+                document.getElementById('property_id_display').textContent = `ID: ${propertyId}`;
+
+                // Set edit button link
+                document.getElementById('edit_button').href = `/static/add_update.html?id=${propertyId}&context=${context}`;
+
+                // Update customer header based on context
+                document.getElementById('customer_header').textContent =
+                    context === 'supply' ? 'Seller Details' : 'Requester Details';
+
+                // Populate core information
+                document.getElementById('title').textContent = displayValue(property.title);
+                document.getElementById('description').textContent = displayValue(property.description);
+                document.getElementById('property_type').textContent = displayValue(property.property_type);
+                document.getElementById('listing_type').textContent = displayValue(property.listing_type);
+                document.getElementById('furnishing_status').textContent = displayValue(property.furnishing_status);
+
+                // Populate location & specifications
+                document.getElementById('locality').textContent = displayValue(property.locality);
+                document.getElementById('bathrooms').textContent = displayValue(property.bathrooms);
+                document.getElementById('facing_direction').textContent = displayValue(property.facing_direction);
+                document.getElementById('age_of_building').textContent = displayValue(property.age_of_building, '-') + (property.age_of_building ? ' years' : '');
+                document.getElementById('lift_available').textContent = property.lift_available === true ? 'Yes ✓' : property.lift_available === false ? 'No ✗' : '-';
+
+                // BHK and Area (handle both supply and demand)
+                if (property.bhk) {
+                    document.getElementById('bhk').textContent = `${property.bhk} BHK`;
+                } else if (property.bhk_min && property.bhk_max) {
+                    document.getElementById('bhk').textContent = `${property.bhk_min} - ${property.bhk_max} BHK`;
+                } else {
+                    document.getElementById('bhk').textContent = '-';
+                }
+
+                if (property.area_sqft) {
+                    document.getElementById('area_sqft').textContent = `${property.area_sqft.toLocaleString('en-IN')} sqft`;
+                } else if (property.area_sqft_min && property.area_sqft_max) {
+                    document.getElementById('area_sqft').textContent = `${property.area_sqft_min.toLocaleString('en-IN')} - ${property.area_sqft_max.toLocaleString('en-IN')} sqft`;
+                } else {
+                    document.getElementById('area_sqft').textContent = '-';
+                }
+
+                // Floor information (supply only)
+                if (property.floor_number !== null && property.floor_number !== undefined) {
+                    document.getElementById('floor_info_div').classList.remove('hidden');
+                    const floorText = property.total_floors
+                        ? `${property.floor_number} / ${property.total_floors}`
+                        : property.floor_number;
+                    document.getElementById('floor_info').textContent = floorText;
+                }
+
+                // Pricing information
+                if (property.price) {
+                    document.getElementById('price').textContent = formatCurrency(property.price);
+                } else if (property.price_min && property.price_max) {
+                    document.getElementById('price').textContent =
+                        `${formatCurrency(property.price_min)} - ${formatCurrency(property.price_max)}`;
+                } else {
+                    document.getElementById('price').textContent = '-';
+                }
+
+                if (property.deposit || property.deposit_max) {
+                    document.getElementById('deposit_div').classList.remove('hidden');
+                    const depositValue = property.deposit || property.deposit_max;
+                    document.getElementById('deposit').textContent = formatCurrency(depositValue);
+                }
+
+                // Features & Amenities
+                document.getElementById('amenities').innerHTML = formatArray(property.amenities);
+                document.getElementById('overlooking').innerHTML = formatArray(property.overlooking);
+                document.getElementById('additional_rooms').innerHTML = formatArray(property.additional_rooms);
+                document.getElementById('listed_date').textContent = property.listed_date
+                    ? new Date(property.listed_date).toLocaleDateString('en-IN')
+                    : '-';
+
+                // Customer details
+                document.getElementById('customer_name').textContent = displayValue(property.customer_name);
+                document.getElementById('customer_email').textContent = displayValue(property.customer_email);
+                document.getElementById('customer_phone').textContent = displayValue(property.customer_phone);
+                document.getElementById('customer_referred_by').textContent = displayValue(property.customer_referred_by);
+                document.getElementById('customer_address').textContent = displayValue(property.customer_address);
+                document.getElementById('customer_additional_info').textContent = displayValue(property.customer_additional_info);
+
+                // Show property details, hide loading
+                loading.classList.add('hidden');
+                propertyDetails.classList.remove('hidden');
+
+            } catch (err) {
+                console.error('Error loading property:', err);
+                error.classList.remove('hidden');
+                errorMessage.textContent = err.message;
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Load property details on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize user menu
+            const userMenuPlaceholder = document.getElementById('userMenuPlaceholder');
+            if (userMenuPlaceholder) {
+                userMenuPlaceholder.innerHTML = createUserMenu();
+                initUserMenu();
+            }
+
+            loadPropertyDetails();
+        });
+    </script>
+</body>
+</html>

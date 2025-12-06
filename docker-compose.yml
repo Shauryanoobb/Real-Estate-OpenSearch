@@ -48,8 +48,31 @@ services:
     networks:
       - app-net
 
+  # ----------------------------------------------------
+  # POSTGRESQL DATABASE (NEW SERVICE)
+  # ----------------------------------------------------
+  db:
+    image: postgres:16.1-alpine
+    container_name: postgres-db
+    restart: always
+    environment:
+      # CRITICAL: These credentials must match the SQLAlchemy URL in your backend code
+      POSTGRES_USER: user            
+      POSTGRES_PASSWORD: password    
+      POSTGRES_DB: realestate_db     
+    volumes:
+      # Persistent volume for database files
+      - db-data:/var/lib/postgresql/data
+    ports:
+      # Expose the standard PostgreSQL port (5432) to your local machine
+      - 5432:5432 
+    networks:
+      - opensearch-net # Join the common network
+
 volumes:
-  opensearch-data:
+  opensearch-data1:
+  opensearch-data2:
+  db-data:
 
 networks:
   app-net:

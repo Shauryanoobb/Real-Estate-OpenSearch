@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Search & List</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/static/auth.js"></script>
+</head>
+<body class="bg-gray-50 p-4 sm:p-6">
+
+    <div class="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-2xl shadow-xl">
+        <!-- Header with User Menu -->
+        <div class="flex justify-between items-center mb-4 sm:mb-6 border-b pb-4">
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-indigo-700">🏠 Real Estate Matching Portal</h1>
+            <div id="userMenuPlaceholder"></div>
+        </div>
+
+        <!-- Context Switcher -->
+        <div class="mb-6 flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-6 justify-center p-3 bg-indigo-50 rounded-lg">
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="search_context" value="supply" checked onchange="setSearchContext('supply')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Search Inventory (Supply)</span>
+            </label>
+            <label class="flex items-center space-x-2 font-semibold text-gray-700 cursor-pointer">
+                <input type="radio" name="search_context" value="demand" onchange="setSearchContext('demand')" class="text-indigo-600 focus:ring-indigo-500">
+                <span>Search Requests (Demand)</span>
+            </label>
+        </div>
+
+        <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:space-x-4 sm:gap-0">
+            <a href="/static/add_update.html" class="bg-green-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-700 transition duration-150 text-center">➕ Add New Listing</a>
+            <button onclick="listAll()" class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150">📜 List All</button>
+            <button onclick="toggleFilters()" class="sm:hidden bg-gray-600 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-gray-700 transition duration-150">🔍 Toggle Filters</button>
+        </div>
+
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">Find Listings / Requirements</h2>
+        <div id="filterPanel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-indigo-50 p-4 sm:p-6 rounded-xl mb-6 sm:mb-8">
+
+            <!-- CORE FILTERS -->
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Locality</label>
+                <input id="locality" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search by locality">
+            </div>
+            
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Customer Name</label>
+                <input id="customer_name" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Search by customer name">
+            </div>
+            
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Keywords</label>
+                <input id="keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Description keywords">
+            </div>
+            
+            <div class="col-span-full sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-700 mb-1">Title Keywords</label>
+                <input id="title_keywords" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Title keywords">
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Property Type</label>
+                <select id="property_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">All Types</option>
+                    <option value="Flat">Flat</option>
+                    <option value="Bungalow">Bungalow</option>
+                    <option value="Plot">Plot</option>
+                    <option value="Office">Office</option>
+                    <option value="Shop">Shop</option>
+                    <option value="Agricultural Land">Agricultural Land</option>
+                    <option value="Industrial Land">Industrial Land</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Listing Type</label>
+                <select id="listing_type" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">All</option>
+                    <option value="SALE">Sale</option>
+                    <option value="RENT">Rent</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Facing Direction</label>
+                <input id="facing_direction" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="e.g., North">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Furnishing</label>
+                <select id="furnishing_status" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                    <option value="">Any</option>
+                    <option value="FURNISHED">FURNISHED</option>
+                    <option value="SEMI_FURNISHED">SEMI-FURNISHED</option>
+                    <option value="UNFURNISHED">UNFURNISHED</option>
+                </select>
+            </div>
+
+            <!-- DYNAMIC SPECIFICATION INPUTS CONTAINER -->
+            <div id="spec_fields" class="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Content injected here by JavaScript -->
+            </div>
+            
+            <div class="col-span-full flex flex-col sm:flex-row gap-2 sm:gap-3 mt-2">
+                <button onclick="search()" class="flex-1 bg-indigo-600 text-white p-2.5 sm:p-3 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150 text-sm sm:text-base">
+                    🔍 Search
+                </button>
+                <button onclick="clearFilters()" class="flex-1 sm:flex-none bg-gray-500 text-white px-4 sm:px-6 py-2.5 sm:p-3 rounded-lg font-semibold hover:bg-gray-600 transition duration-150 text-sm sm:text-base">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center mb-3 sm:mb-4">
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800" id="listing_header">Inventory Listings</h2>
+            <span id="result_count" class="text-sm sm:text-base text-gray-600"></span>
+        </div>
+        
+        <div id="results" class="space-y-4 sm:space-y-6">
+            <p class="text-gray-500 text-sm sm:text-base" id="status_message">Select a context and start searching.</p>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin + "/api";
+        let currentSearchContext = 'supply'; // Default context
+
+        const resultsContainer = document.getElementById("results");
+        const statusMessage = document.getElementById("status_message");
+        const resultCount = document.getElementById("result_count");
+        const specFieldsContainer = document.getElementById("spec_fields");
+        const listingHeader = document.getElementById("listing_header");
+
+        function toggleFilters() {
+            const panel = document.getElementById('filterPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function formatPrice(price) {
+            if (!price) return 'N/A';
+            if (price >= 10000000) {
+                return `₹${(price / 10000000).toFixed(2)} Cr`;
+            } else if (price >= 100000) {
+                return `₹${(price / 100000).toFixed(2)} L`;
+            }
+            return `₹${price.toLocaleString('en-IN')}`;
+        }
+        
+        function clearFilters() {
+            document.getElementById('locality').value = '';
+            document.getElementById('customer_name').value = '';
+            document.getElementById('keywords').value = '';
+            document.getElementById('title_keywords').value = '';
+            document.getElementById('property_type').value = '';
+            document.getElementById('listing_type').value = '';
+            document.getElementById('facing_direction').value = '';
+            document.getElementById('furnishing_status').value = '';
+            
+            // Clear dynamic fields
+            const dynamicFields = specFieldsContainer.querySelectorAll('input, select');
+            dynamicFields.forEach(field => field.value = '');
+        }
+        
+        function renderSpecFields() {
+            specFieldsContainer.innerHTML = '';
+            
+            if (currentSearchContext === 'supply') {
+                listingHeader.textContent = 'Inventory Listings';
+                // Fields for Supply Search (Exact or Min/Max)
+                specFieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK</label>
+                        <input id="bhk" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="BHK">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Min Area (sqft)</label>
+                        <input id="min_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Max Area (sqft)</label>
+                        <input id="max_sqft" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Min Price (₹)</label>
+                        <input id="min_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Max Price (₹)</label>
+                        <input id="max_price" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift Available?</label>
+                        <select id="has_lift" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                            <option value="">Any</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                `;
+            } else {
+                listingHeader.textContent = 'Demand Requests';
+                // Fields for Demand Search (Min/Max Ranges)
+                specFieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK Min</label>
+                        <input id="bhk_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">BHK Max</label>
+                        <input id="bhk_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Area Min (sqft)</label>
+                        <input id="area_sqft_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Area Max (sqft)</label>
+                        <input id="area_sqft_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Budget Min (₹)</label>
+                        <input id="price_min" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Min">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Budget Max (₹)</label>
+                        <input id="price_max" type="number" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base" placeholder="Max">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Lift Required?</label>
+                        <select id="has_lift" class="w-full p-2.5 sm:p-3 border rounded-lg text-sm sm:text-base">
+                            <option value="">Any</option>
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function setSearchContext(context) {
+            currentSearchContext = context;
+            renderSpecFields(); // Re-render inputs for the new context
+            resultsContainer.innerHTML = ''; // Clear results
+            resultCount.textContent = '';
+            statusMessage.textContent = `Ready to search the ${context} index.`;
+            statusMessage.style.display = 'block';
+        }
+
+        function renderResults(data) {
+            resultsContainer.innerHTML = '';
+            statusMessage.style.display = 'none';
+
+            if (!data.hits || data.hits.hits.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-red-500 font-semibold text-sm sm:text-base">No records found matching your criteria.</p>';
+                resultCount.textContent = '0 records';
+                return;
+            }
+
+            const count = data.hits.hits.length;
+            resultCount.textContent = `${count} ${count === 1 ? 'record' : 'records'} found`;
+
+            const isSupply = currentSearchContext === 'supply';
+            
+            data.hits.hits.forEach(hit => {
+                const p = hit._source;
+                const recordId = hit._id;
+                
+                const title = p.title || p.customer_name || 'Unnamed Record';
+                
+                // Determine main price display based on context
+                const mainPrice = isSupply 
+                    ? (p.price ? formatPrice(p.price) : 'N/A')
+                    : (p.price_min && p.price_max) ? `${formatPrice(p.price_min)} - ${formatPrice(p.price_max)}` : 'N/A';
+                
+                // Determine main specs display based on context
+                const mainSpecs = isSupply
+                    ? `${p.bhk || '?'} BHK • ${p.area_sqft || '?'} sqft`
+                    : `BHK: ${p.bhk_min || 'Any'} to ${p.bhk_max || 'Any'} • Area: ${p.area_sqft_min || 'Any'} - ${p.area_sqft_max || 'Any'} sqft`;
+                
+                const listingBadge = p.listing_type 
+                    ? `<span class="inline-block px-2 py-1 ${p.listing_type === 'SALE' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded">${p.listing_type === 'SALE' ? 'For Sale' : 'For Rent'}</span>`
+                    : '';
+                
+                const facingInfo = p.facing_direction ? `🧭 ${p.facing_direction}` : '';
+                const customerContact = p.customer_email || p.customer_phone || '';
+                const customerInfo = p.customer_name ? `${p.customer_name}${customerContact ? ` (${customerContact})` : ''}` : 'Unknown';
+                
+                const editUrl = `/static/add_update.html?id=${recordId}&context=${currentSearchContext}`;
+
+                const resultCard = `
+                    <div class="p-4 sm:p-6 border border-gray-200 rounded-xl shadow-md bg-white hover:shadow-lg transition duration-200">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                            <div class="flex-1">
+                                <h3 class="text-lg sm:text-xl font-bold text-indigo-800 break-words">${title}</h3>
+                                <p class="text-xs sm:text-sm text-gray-500 mt-1">ID: ${recordId}</p>
+                            </div>
+                            <div class="text-left sm:text-right">
+                                <p class="text-lg sm:text-xl font-extrabold ${isSupply ? 'text-green-600' : 'text-purple-600'}">${mainPrice}</p>
+                                ${listingBadge ? `<div class="mt-1">${listingBadge}</div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm sm:text-base">
+                            <p class="text-gray-700">📍 <strong>${p.locality || 'N/A'}</strong> ${facingInfo}</p>
+                            <p class="text-gray-700">${mainSpecs}</p>
+                            
+                            <p class="text-sm text-gray-600 mt-2">
+                                ${isSupply ? 'Seller' : 'Requester'}: <strong>${customerInfo}</strong>
+                            </p>
+                            
+                            ${p.description ? `<p class="text-sm text-gray-600 mt-2 line-clamp-2">${p.description}</p>` : ''}
+                        </div>
+                        
+                        <div class="mt-4 flex flex-wrap gap-3 text-sm sm:text-base">
+                            <a href="/static/property_detail.html?id=${recordId}&context=${currentSearchContext}" class="flex-1 sm:flex-none font-medium text-blue-600 hover:text-blue-700 hover:underline text-center sm:text-left">👁️ View</a>
+                            <a href="${editUrl}" class="flex-1 sm:flex-none font-medium text-yellow-600 hover:text-yellow-700 hover:underline text-center sm:text-left">✏️ Edit</a>
+                            <button onclick="deleteRecord('${recordId}', '${currentSearchContext}')" class="flex-1 sm:flex-none font-medium text-red-600 hover:text-red-700 hover:underline">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+                resultsContainer.innerHTML += resultCard;
+            });
+        }
+
+        async function listAll() {
+            // Require authentication
+            if (!AuthManager.isAuthenticated()) {
+                statusMessage.textContent = 'Please log in to view properties';
+                statusMessage.className = 'text-red-500 font-semibold';
+                return;
+            }
+
+            const endpoint = currentSearchContext; // 'supply' or 'demand'
+            statusMessage.textContent = `Fetching all ${endpoint} records...`;
+            statusMessage.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            resultCount.textContent = '';
+
+            try {
+                const res = await authenticatedFetch(`${BASE_URL}/${endpoint}/?size=50`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                renderResults(data);
+            } catch (error) {
+                statusMessage.textContent = `Error listing records: ${error.message}`;
+                statusMessage.className = 'text-red-500 font-semibold';
+            }
+        }
+
+        async function search() {
+            const endpoint = currentSearchContext;
+            const params = new URLSearchParams();
+            
+            // 1. Shared Filters
+            const sharedFields = [
+                "locality", "customer_name", "keywords", "title_keywords", 
+                "property_type", "listing_type", "facing_direction", "furnishing_status"
+            ];
+            sharedFields.forEach(f => {
+                const element = document.getElementById(f);
+                const value = element ? element.value : '';
+                if (value !== "") params.append(f, value);
+            });
+
+            // 2. Contextual Filters (Read dynamically generated fields)
+            if (endpoint === 'supply') {
+                const supplyFields = ["bhk", "min_sqft", "max_sqft", "min_price", "max_price", "has_lift"];
+                supplyFields.forEach(f => {
+                    const element = document.getElementById(f);
+                    const value = element ? element.value : '';
+                    if (value !== "") params.append(f, value);
+                });
+            } else {
+                const demandFields = ["bhk_min", "bhk_max", "area_sqft_min", "area_sqft_max", "price_min", "price_max", "has_lift"];
+                demandFields.forEach(f => {
+                    const element = document.getElementById(f);
+                    const value = element ? element.value : '';
+                    if (value !== "") params.append(f, value);
+                });
+            }
+
+            // Require authentication
+            if (!AuthManager.isAuthenticated()) {
+                statusMessage.textContent = 'Please log in to search properties';
+                statusMessage.className = 'text-red-500 font-semibold';
+                return;
+            }
+
+            statusMessage.textContent = `Searching ${endpoint} index...`;
+            statusMessage.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            resultCount.textContent = '';
+
+            try {
+                const url = `${BASE_URL}/search/${endpoint}/?${params.toString()}`;
+                const res = await authenticatedFetch(url);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                renderResults(data);
+            } catch (error) {
+                statusMessage.textContent = `Error searching records: ${error.message}`;
+                statusMessage.className = 'text-red-500 font-semibold';
+            }
+        }
+        
+        async function deleteRecord(recordId, context) {
+            // Require authentication for delete
+            if (!AuthManager.isAuthenticated()) {
+                if (confirm('You must be logged in to delete records. Go to login page?')) {
+                    window.location.href = '/static/login.html';
+                }
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to delete this ${context} record (${recordId})?`)) return;
+
+            try {
+                const res = await authenticatedFetch(`${BASE_URL}/${context}/${recordId}`, {
+                    method: 'DELETE'
+                });
+                if (res.status === 404) {
+                    alert('Record not found or you do not have permission to delete it.');
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+                alert(`Record deleted successfully.`);
+                listAll();
+
+            } catch (error) {
+                alert(`Error deleting record: ${error.message}`);
+            }
+        }
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize user menu
+            const userMenuPlaceholder = document.getElementById('userMenuPlaceholder');
+            if (userMenuPlaceholder) {
+                userMenuPlaceholder.innerHTML = createUserMenu();
+                initUserMenu();
+            }
+
+            renderSpecFields(); // Render default 'supply' fields
+            setSearchContext('supply');
+            listAll();
+        });
+    </script>
+
+</body>
+</html>

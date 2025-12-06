@@ -16,5 +16,4 @@ venv/
 # OS specific
 .DS_Store
 
-shaurya.pem
-shaurya1.pem
+*.pem
