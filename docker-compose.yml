@@ -45,17 +45,47 @@ services:
     restart: always
     environment:
       # CRITICAL: These credentials must match the SQLAlchemy URL in your backend code
-      POSTGRES_USER: user            
-      POSTGRES_PASSWORD: password    
-      POSTGRES_DB: realestate_db     
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: realestate_db
     volumes:
       # Persistent volume for database files
       - db-data:/var/lib/postgresql/data
     ports:
       # Expose the standard PostgreSQL port (5432) to your local machine
-      - 5432:5432 
+      - 5432:5432
     networks:
       - opensearch-net # Join the common network
+
+  # ----------------------------------------------------
+  # BACKEND API (FastAPI)
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend-api
+    restart: always
+    ports:
+      - 8000:8000 # Expose FastAPI on port 8000
+    volumes:
+      # Mount frontend directory to serve static files
+      - ./frontend:/app/frontend
+      # Mount backend code for development (optional, comment out for production)
+      - ./backend:/app
+      # Mount backups directory to persist database backups
+      - ./backups:/backups
+    environment:
+      # Database connection string
+      - DATABASE_URL=postgresql://user:password@db:5432/realestate_db
+      # OpenSearch connection
+      - OPENSEARCH_HOST=opensearch-node1
+      - OPENSEARCH_PORT=9200
+    depends_on:
+      - db
+      - opensearch-node1
+    networks:
+      - opensearch-net
 
 volumes:
   opensearch-data1:

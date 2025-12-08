@@ -9,14 +9,14 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
-from backend.core.database_client import get_db
-from backend.core.auth import (
+from core.database_client import get_db
+from core.auth import (
     get_password_hash,
     authenticate_user,
     create_access_token,
     get_current_user
 )
-from backend.models.user import User as SQLUser
+from models.user import User as SQLUser
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])

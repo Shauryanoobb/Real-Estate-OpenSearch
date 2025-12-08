@@ -1,7 +1,7 @@
 from sqlalchemy_utils import database_exists, create_database
-from .database_client import engine, SQLALCHEMY_DATABASE_URL
-from ..models.sql_property import Base as PropertyBase  # Property models Base
-from ..models.user import Base as UserBase  # User model Base
+from core.database_client import engine, SQLALCHEMY_DATABASE_URL
+from models.sql_property import Base as PropertyBase  # Property models Base
+from models.user import Base as UserBase  # User model Base
 
 #python -m backend.core.initialise_db to run this file directly
 #on changin an enum , you will have to manually drop that enum datatypoe like this DROP TYPE property_types;

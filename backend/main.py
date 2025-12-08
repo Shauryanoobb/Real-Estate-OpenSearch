@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import properties, auth  # Import routers
+from routers import properties, auth  # Import routers
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse

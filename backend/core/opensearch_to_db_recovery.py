@@ -24,10 +24,10 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import Session
 
 # Import existing clients and models
-from backend.core.database_client import SessionLocal, engine
-from backend.core.opensearch_client import client as opensearch_client
-from backend.models.sql_property import Base, SQLSupplyProperty, SQLDemandRequest
-from backend.core.opensearch_init import INDEX_SUPPLY, INDEX_DEMAND
+from core.database_client import SessionLocal, engine
+from core.opensearch_client import client as opensearch_client
+from models.sql_property import Base, SQLSupplyProperty, SQLDemandRequest
+from core.opensearch_init import INDEX_SUPPLY, INDEX_DEMAND
 
 
 class RecoveryStats:

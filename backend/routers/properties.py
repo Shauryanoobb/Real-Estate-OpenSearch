@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from uuid import uuid4
 import logging
-from ..core.opensearch_client import client
-from ..core.database_client import get_db
-from ..core.auth import get_current_user, get_current_user_id
-from ..models.property import SupplyProperty, DemandRequest
-from ..models.sql_property import SQLSupplyProperty, SQLDemandRequest
-from ..models.user import User 
+from core.opensearch_client import client
+from core.database_client import get_db
+from core.auth import get_current_user, get_current_user_id
+from models.property import SupplyProperty, DemandRequest
+from models.sql_property import SQLSupplyProperty, SQLDemandRequest
+from models.user import User 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO) 

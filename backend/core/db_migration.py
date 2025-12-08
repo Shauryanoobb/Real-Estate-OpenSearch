@@ -22,9 +22,9 @@ import argparse
 from typing import Optional, Dict, Any
 from sqlalchemy import inspect, text
 
-from backend.core.database_client import engine
-from backend.core.opensearch_client import client as opensearch_client
-from backend.core.opensearch_init import INDEX_SUPPLY, INDEX_DEMAND
+from core.database_client import engine
+from core.opensearch_client import client as opensearch_client
+from core.opensearch_init import INDEX_SUPPLY, INDEX_DEMAND
 
 
 # Type mapping for PostgreSQL

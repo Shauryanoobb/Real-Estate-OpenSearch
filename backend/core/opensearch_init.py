@@ -1,5 +1,5 @@
 import json
-from ..core.opensearch_client import client # Your existing OpenSearch client
+from core.opensearch_client import client # Your existing OpenSearch client
 import time
 
 INDEX_SUPPLY = "supply_properties"

@@ -25,11 +25,12 @@ import os
 
 
 # Database configuration (matches database_client.py)
-DB_HOST = "localhost"
-DB_PORT = "5432"
-DB_NAME = "realestate_db"
-DB_USER = "user"
-DB_PASSWORD = "password"  # Will use PGPASSWORD env var
+# Use environment variables with Docker-friendly defaults
+DB_HOST = os.getenv("DB_HOST", "db")  # "db" for Docker, "localhost" for local
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "realestate_db")
+DB_USER = os.getenv("DB_USER", "user")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 # Default backup directory
 DEFAULT_BACKUP_DIR = Path(__file__).parent.parent.parent / "backups"

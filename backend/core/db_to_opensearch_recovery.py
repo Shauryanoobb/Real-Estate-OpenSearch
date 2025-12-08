@@ -24,10 +24,10 @@ from sqlalchemy.orm import Session
 from opensearchpy.helpers import bulk, BulkIndexError
 
 # Import existing clients and models
-from backend.core.database_client import SessionLocal
-from backend.core.opensearch_client import client as opensearch_client
-from backend.models.sql_property import SQLSupplyProperty, SQLDemandRequest
-from backend.core.opensearch_init import (
+from core.database_client import SessionLocal
+from core.opensearch_client import client as opensearch_client
+from models.sql_property import SQLSupplyProperty, SQLDemandRequest
+from core.opensearch_init import (
     INDEX_SUPPLY,
     INDEX_DEMAND,
     SUPPLY_MAPPING,

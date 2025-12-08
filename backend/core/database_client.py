@@ -1,9 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from typing import Generator
+import os
 
-# NOTE: Replace these with your actual PostgreSQL connection details and environment variables.
-SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost:5432/realestate_db" #change localhost to db, if running inside
+# Database URL: uses environment variable or defaults to Docker service name 'db'
+# For local development outside Docker, set DATABASE_URL="postgresql://user:password@localhost:5432/realestate_db"
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://user:password@db:5432/realestate_db"
+)
 
 # Create the SQLAlchemy engine. 
 # 'pool_pre_ping=True' is crucial for long-running production applications 
