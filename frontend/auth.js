@@ -82,9 +82,9 @@ async function authenticatedFetch(url, options = {}) {
 function createUserMenu() {
     if (!AuthManager.isAuthenticated()) {
         return `
-            <div class="flex gap-4">
-                <a href="/static/login.html" class="text-blue-600 hover:text-blue-700 font-medium">Login</a>
-                <a href="/static/signup.html" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Sign Up</a>
+            <div class="flex gap-3">
+                <a href="/static/login.html" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 font-medium transition duration-150">Login</a>
+                <a href="/static/signup.html" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium transition duration-150">Sign Up</a>
             </div>
         `;
     }
