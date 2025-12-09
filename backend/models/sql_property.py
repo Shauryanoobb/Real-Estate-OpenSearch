@@ -81,11 +81,14 @@ class SQLDemandRequest(Base):
     bhk_max = Column(Integer)
     area_sqft_min = Column(Integer)
     area_sqft_max = Column(Integer)
-    
+
+    # Additional specs
+    bathrooms = Column(Integer)
+
     # Boolean/Date/Array
     listed_date = Column(String)
     lift_available = Column(Boolean)
-    amenities = Column(ARRAY(String)) 
+    amenities = Column(ARRAY(String))
     overlooking = Column(ARRAY(String))
     additional_rooms = Column(ARRAY(String))
     facing_direction = Column(String)

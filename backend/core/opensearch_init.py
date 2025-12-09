@@ -84,7 +84,7 @@ SUPPLY_MAPPING = {
       "property_type": { "type": "keyword" },
       "listing_type": { "type": "keyword" },
       "furnishing_status": { "type": "keyword" },
-      "facing_direction": { "type": "keyword" },
+      "facing_direction": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
 
       "price": { "type": "float" },
       "deposit": { "type": "float" }, 
@@ -102,7 +102,7 @@ SUPPLY_MAPPING = {
       "overlooking": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       "additional_rooms": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       
-      "customer_name": { "type": "text" },
+      "customer_name": { "type": "text", "analyzer": "fuzzy_search_analyzer"},
       "customer_email": { "type": "keyword" },
       "customer_phone": { "type": "keyword" },
       "customer_address": { "type": "text" },
@@ -133,7 +133,8 @@ DEMAND_MAPPING = {
       "property_type": { "type": "keyword" },
       "listing_type": { "type": "keyword" },
       "furnishing_status": { "type": "keyword" },
-
+      "facing_direction": { "type": "text", "analyzer": "fuzzy_search_analyzer" },
+      
       # Range Fields (Min/Max)
       "price_min": { "type": "float" },
       "price_max": { "type": "float" },
@@ -147,12 +148,11 @@ DEMAND_MAPPING = {
       "bathrooms": { "type": "integer" },
       "lift_available": { "type": "boolean" },
       "listed_date": { "type": "date", "format": "yyyy-MM-dd" },
-      "move_in_date": { "type": "date", "format": "yyyy-MM-dd" }, 
       "amenities": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "fuzzy_search_analyzer" } } },
       "overlooking": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       "additional_rooms": { "type": "keyword", "fields": { "text": { "type": "text", "analyzer": "standard" } } },
       
-      "customer_name": { "type": "text" },
+      "customer_name": { "type": "text", "analyzer": "fuzzy_search_analyzer"},
       "customer_email": { "type": "keyword" },
       "customer_phone": { "type": "keyword" },
       "customer_address": { "type": "text" },

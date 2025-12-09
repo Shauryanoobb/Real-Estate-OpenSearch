@@ -88,7 +88,7 @@ class SupplyProperty(BaseListing):
 
 class DemandRequest(BaseListing):
     """Represents a client's requirements, using min/max ranges for search."""
-    
+
     # Financial Ranges (Price/Budget)
     price_min: Optional[float] = None
     price_max: Optional[float] = None
@@ -99,3 +99,6 @@ class DemandRequest(BaseListing):
     bhk_max: Optional[int] = None
     area_sqft_min: Optional[int] = None
     area_sqft_max: Optional[int] = None
+
+    # Additional specs
+    bathrooms: Optional[int] = None

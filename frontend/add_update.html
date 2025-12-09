@@ -94,9 +94,14 @@
                     </div>
 
                     <!-- DEPOSIT FIELDS (CONDITIONAL) -->
-                    <div id="deposit_group" class="hidden col-span-full">
-                        <label class="block text-sm font-medium text-gray-700 mb-1" id="deposit_label">Deposit Amount (₹)</label>
+                    <div id="deposit_exact_group" class="hidden col-span-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Deposit Amount (₹)</label>
                         <input type="number" id="deposit" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
+                    </div>
+
+                    <div id="deposit_max_group" class="hidden col-span-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Maximum Deposit Budget (₹)</label>
+                        <input type="number" id="deposit_max" class="block w-full p-2 border border-gray-300 rounded-md text-sm sm:text-base">
                     </div>
                     
                 </div>
@@ -172,12 +177,6 @@
                          <label class="block text-sm font-medium text-gray-700 mb-1">Total Floors</label>
                          <input type="number" id="total_floors" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Total">
                     </div>
-                    
-                    <!-- DEMAND-ONLY FIELDS -->
-                    <div class="col-span-full sm:col-span-2 hidden demand-only">
-                         <label class="block text-sm font-medium text-gray-700 mb-1">Target Move-in Date</label>
-                         <input type="date" id="move_in_date" class="block w-full p-2 border rounded-md text-sm sm:text-base">
-                    </div>
 
                     <!-- ADDITIONAL ROOMS (Multi-Select) -->
                     <div class="col-span-full sm:col-span-2">
@@ -225,7 +224,7 @@
                         </select>
                     </div>
                     
-                    <div class="col-span-full sm:col-span-1">
+                    <div class="col-span-full sm:col-span-1 supply-only">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Building Age (years)</label>
                         <input type="number" id="age_of_building" class="block w-full p-2 border rounded-md text-sm sm:text-base" placeholder="Age">
                     </div>
@@ -318,7 +317,8 @@
         const displayedId = document.getElementById('displayed_property_id');
         
         // Dynamic Field Groups
-        const depositGroup = document.getElementById('deposit_group');
+        const depositExactGroup = document.getElementById('deposit_exact_group');
+        const depositMaxGroup = document.getElementById('deposit_max_group');
         const priceExactGroup = document.getElementById('price_exact_group');
         const priceRangeGroup = document.getElementById('price_range_group');
         const bhkExactGroup = document.getElementById('bhk_exact_group');
@@ -365,18 +365,20 @@
 
         function toggleDepositField() {
             const listingType = document.getElementById('listing_type').value;
-            const depositLabel = document.getElementById('deposit_label');
 
             if (listingType === 'RENT') {
-                depositGroup.classList.remove('hidden');
                 if (currentContext === 'supply') {
-                    depositLabel.textContent = 'Deposit Amount (₹)';
+                    depositExactGroup.classList.remove('hidden');
+                    depositMaxGroup.classList.add('hidden');
                 } else {
-                    depositLabel.textContent = 'Deposit Max Budget (₹)';
+                    depositExactGroup.classList.add('hidden');
+                    depositMaxGroup.classList.remove('hidden');
                 }
             } else {
-                depositGroup.classList.add('hidden');
+                depositExactGroup.classList.add('hidden');
+                depositMaxGroup.classList.add('hidden');
                 document.getElementById('deposit').value = '';
+                document.getElementById('deposit_max').value = '';
             }
         }
         
@@ -396,10 +398,10 @@
                 "customer_referred_by", "customer_additional_info"
             ];
             
-            const supplyFields = ["price", "deposit", "bhk", "bathrooms", "area_sqft", 
+            const supplyFields = ["price", "deposit", "bhk", "bathrooms", "area_sqft",
                                   "age_of_building", "floor_number", "total_floors"];
-            const demandFields = ["price_min", "price_max", "deposit_max", "bhk_min", 
-                                  "bhk_max", "area_sqft_min", "area_sqft_max"];
+            const demandFields = ["price_min", "price_max", "deposit_max", "bhk_min",
+                                  "bhk_max", "area_sqft_min", "area_sqft_max", "bathrooms"];
             
             const booleanFields = ["lift_available"];
 
@@ -485,7 +487,6 @@
                 document.getElementById("bhk_max").value = source.bhk_max || '';
                 document.getElementById("area_sqft_min").value = source.area_sqft_min || '';
                 document.getElementById("area_sqft_max").value = source.area_sqft_max || '';
-                document.getElementById("move_in_date").value = source.move_in_date ? source.move_in_date.split('T')[0] : '';
             }
             
             document.getElementById("bathrooms").value = source.bathrooms || '';
@@ -609,25 +610,38 @@
 
                 if (json.matches && json.matches.length > 0) {
                     const matchType = currentContext === 'supply' ? 'Demand Requests' : 'Properties';
+                    const matchContext = currentContext === 'supply' ? 'demand' : 'supply';
                     matchResultsContent.innerHTML = `
                         <p class="text-lg sm:text-xl font-semibold text-green-700 mb-2">${json.matches.length} Matching ${matchType} Found!</p>
-                        <ul class="list-disc list-inside space-y-2 p-3 sm:p-4 bg-yellow-50 rounded-lg">
+                        <div class="space-y-3 p-3 sm:p-4 bg-yellow-50 rounded-lg">
                             ${json.matches.map(match => {
                                 const source = match._source;
                                 const matchId = match._id;
                                 const matchTitle = source.title || source.customer_name || 'Unnamed Record';
-                                const priceInfo = source.price 
+                                const locality = source.locality || 'Unknown location';
+                                const priceInfo = source.price
                                     ? `₹${source.price.toLocaleString('en-IN')}`
-                                    : (source.price_min && source.price_max) 
+                                    : (source.price_min && source.price_max)
                                         ? `₹${source.price_min.toLocaleString('en-IN')} - ₹${source.price_max.toLocaleString('en-IN')}`
                                         : 'N/A';
-                                return `<li class="text-gray-700 text-sm break-words">
-                                    <span class="font-medium">${matchTitle}</span><br>
-                                    <span class="text-xs text-gray-500">ID: ${matchId}</span><br>
-                                    <span class="text-xs">Price: ${priceInfo}</span>
-                                </li>`;
+                                const detailUrl = `/static/property_detail.html?id=${matchId}&context=${matchContext}`;
+                                return `
+                                    <a href="${detailUrl}" class="block p-3 border border-yellow-200 rounded-lg bg-white hover:bg-yellow-50 hover:border-yellow-400 transition duration-150">
+                                        <div class="flex justify-between items-start gap-2">
+                                            <div class="flex-1">
+                                                <div class="font-semibold text-gray-800 text-sm sm:text-base">${matchTitle}</div>
+                                                <div class="text-xs text-gray-500 mt-1">📍 ${locality}</div>
+                                                <div class="text-xs text-gray-400 mt-1">ID: ${matchId}</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="font-bold text-green-600 text-sm sm:text-base">${priceInfo}</div>
+                                                <div class="text-xs text-blue-600 mt-1">👁️ View Details →</div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                `;
                             }).join('')}
-                        </ul>
+                        </div>
                     `;
                 } else {
                     matchResultsContent.innerHTML = `<p class="text-red-500 font-semibold text-sm sm:text-base">No direct cross-matches found in the ${currentContext === 'supply' ? 'Demand' : 'Supply'} index.</p>`;

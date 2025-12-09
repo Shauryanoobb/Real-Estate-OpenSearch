@@ -38,13 +38,13 @@ def create_cross_search_query(target_index: str, source_model):
     """
     Creates an OpenSearch query in the target index based on the specs of the source model.
     """
-    query = {"bool": {"must": [], "filter": []}}
+    query = {"bool": {"must": [], "should": [], "filter": []}}
 
     # 1. Matching core fields
     if source_model.locality:
         # Use locality analyzer for good matches
         query["bool"]["must"].append({
-            "match": {"locality": {"query": source_model.locality, "fuzziness": "AUTO"}}
+            "match": {"locality": {"query": source_model.locality, "fuzziness": "AUTO", "boost": 3}}
         })
         
     if source_model.property_type:
@@ -53,13 +53,19 @@ def create_cross_search_query(target_index: str, source_model):
     if source_model.listing_type:
         query["bool"]["filter"].append({"term": {"listing_type": source_model.listing_type.value}})
 
+    if source_model.facing_direction: 
+        query["bool"]["should"].append({"match": {"facing_direction": {"query": source_model.facing_direction, "fuzziness": "AUTO", "boost": 2}}})
+
     # 2. Financial/Specification Matching (CRITICAL LOGIC)
     # yaha hi sabse zyada scope hai change ka
+    # can consider adding should clauses for softer matches
     if target_index == INDEX_DEMAND:
         # Case A: Matching SUPPLY (exact price/bhk) against DEMAND (range min/max)
+        #ex, if supply price is 1000, and demand price_min is 800 and price_max is 1200, it's a match
+        #can discuss with popsi if harder filter
         if source_model.price:
-            query["bool"]["filter"].append({"range": {"price_min": {"lte": source_model.price}}})
-            query["bool"]["filter"].append({"range": {"price_max": {"gte": source_model.price}}})
+            query["bool"]["should"].append({"range": {"price_min": {"lte": source_model.price}}})
+            query["bool"]["should"].append({"range": {"price_max": {"gte": source_model.price}}})
 
         if source_model.bhk:
             query["bool"]["filter"].append({"range": {"bhk_min": {"lte": source_model.bhk}}})
@@ -67,10 +73,11 @@ def create_cross_search_query(target_index: str, source_model):
             
     elif target_index == INDEX_SUPPLY:
         # Case B: Matching DEMAND (range min/max) against SUPPLY (exact price/bhk)
+        #ex, if demand price_min is 800 and price_max is 1200, and supply price is 1000, it's a match
         if source_model.price_min:
-            query["bool"]["filter"].append({"range": {"price": {"gte": source_model.price_min}}})
+            query["bool"]["should"].append({"range": {"price": {"gte": source_model.price_min}}})
         if source_model.price_max:
-            query["bool"]["filter"].append({"range": {"price": {"lte": source_model.price_max}}})
+            query["bool"]["should"].append({"range": {"price": {"lte": source_model.price_max}}})
         
         if source_model.bhk_min:
             query["bool"]["filter"].append({"range": {"bhk": {"gte": source_model.bhk_min}}})
@@ -197,7 +204,7 @@ def search_supply_properties(
 
     # --- Standard OpenSearch Query Building (Use INDEX_SUPPLY) ---
 
-    if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO"}}})
+    if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO", "boost": 3}}})
     if keywords: query["bool"]["should"].append({"match": {"description": {"query": keywords, "boost": 2}}})
     if title_keywords: query["bool"]["should"].append({"match": {"title": {"query": title_keywords, "boost": 3}}})
 
@@ -207,9 +214,9 @@ def search_supply_properties(
     if bhk: query["bool"]["filter"].append({"term": {"bhk": bhk}})
     if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
     if listing_type: query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
-    if facing_direction: query["bool"]["filter"].append({"term": {"facing_direction": facing_direction}})
-    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}})
-
+    if facing_direction: query["bool"]["must"].append({"match": {"facing_direction": {"query": facing_direction, "fuzziness": "AUTO"}}})
+    if customer_name: query["bool"]["must"].append({"match": {"customer_name": {"query": customer_name, "fuzziness": "AUTO", "boost": 2}}})
+    #fuzziness auto is vital for typos
     # Range Filters
     if min_sqft or max_sqft:
         sqft_range = {}
@@ -434,10 +441,10 @@ def search_demand_requests(
     # Demand-specific search parameters
     bhk_min: int = None,
     bhk_max: int = None,
-    min_sqft: int = None,
-    max_sqft: int = None,
-    min_price: int = None,
-    max_price: int = None,
+    area_sqft_min: int = None,
+    area_sqft_max: int = None,
+    price_min: int = None,
+    price_max: int = None,
     has_lift: bool = None,
     size: int = 10,
     db: Session = Depends(get_db),
@@ -453,7 +460,8 @@ def search_demand_requests(
     query["bool"]["filter"].append({"term": {"customer_id": current_user.id}})
 
     # --- Full Text Search ---
-    if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO"}}})
+    if locality: query["bool"]["must"].append({"match": {"locality": {"query": locality, "fuzziness": "AUTO", "boost": 3}}})
+    #locality is very important, so keep at higher boost
     if keywords: query["bool"]["should"].append({"match": {"description": {"query": keywords, "boost": 2}}})
     if title_keywords: query["bool"]["should"].append({"match": {"title": {"query": title_keywords, "boost": 3}}})
 
@@ -462,37 +470,117 @@ def search_demand_requests(
     if furnishing_status: query["bool"]["filter"].append({"term": {"furnishing_status": furnishing_status}})
     if has_lift is not None: query["bool"]["filter"].append({"term": {"lift_available": has_lift}})
     if listing_type: query["bool"]["filter"].append({"term": {"listing_type": listing_type}})
-    if facing_direction: query["bool"]["filter"].append({"term": {"facing_direction": facing_direction}})
-    if customer_name: query["bool"]["filter"].append({"term": {"customer_name": customer_name}})
-
-    # --- Range Filters (Demand uses Min/Max fields) ---
+    if facing_direction: query["bool"]["must"].append({"match": {"facing_direction": {"query": facing_direction, "fuzziness": "AUTO"}}})
+    if customer_name: query["bool"]["must"].append({"match": {"customer_name": {"query": customer_name,  "fuzziness": "AUTO", "boost": 2}}})
     
     # BHK Range
+    # --- BHK Range Intersection Logic ---
+    # BHK OR-overlap
     if bhk_min or bhk_max:
-        bhk_range = {}
-        if bhk_min: bhk_range["gte"] = bhk_min
-        if bhk_max: bhk_range["lte"] = bhk_max
-        query["bool"]["filter"].append({"range": {"bhk_min": bhk_range}}) # NOTE: Filter uses the min field in the demand index
+        should_clauses = []
 
+        if bhk_min:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"bhk_min": {"lte": bhk_min}}},
+                        {"range": {"bhk_max": {"gte": bhk_min}}}
+                    ]
+                }
+            })
+
+        if bhk_max:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"bhk_min": {"lte": bhk_max}}},
+                        {"range": {"bhk_max": {"gte": bhk_max}}}
+                    ]
+                }
+            })
+
+        query["bool"]["filter"].append({
+            "bool": {
+                "should": should_clauses,
+                "minimum_should_match": 1
+            }
+        })
+
+    
     # Area Range
-    if min_sqft or max_sqft:
-        sqft_range = {}
-        if min_sqft: sqft_range["gte"] = min_sqft
-        if max_sqft: sqft_range["lte"] = max_sqft
-        #for a soft match on bhk range, use should
-        # query["bool"]["should"].append({
-        #     "range": {
-        #         "bhk_min": bhk_range   # Demand index stores min BHK required
-        #     }
-        # })
-        query["bool"]["filter"].append({"range": {"area_sqft_min": sqft_range}}) # NOTE: Filter uses the min field in the demand index
+    # --- Area Range Intersection ---
+    # Area OR-overlap
+    if area_sqft_min or area_sqft_max:
+        should_clauses = []
+
+        # user_min within doc range
+        if area_sqft_min:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"area_sqft_min": {"lte": area_sqft_min}}},
+                        {"range": {"area_sqft_max": {"gte": area_sqft_min}}}
+                    ]
+                }
+            })
+
+        # user_max within doc range
+        if area_sqft_max:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"area_sqft_min": {"lte": area_sqft_max}}},
+                        {"range": {"area_sqft_max": {"gte": area_sqft_max}}}
+                    ]
+                }
+            })
+
+        query["bool"]["filter"].append({
+            "bool": {
+                "should": should_clauses,
+                "minimum_should_match": 1
+            }
+        })
+
+ 
 
     # Price/Budget Range
-    if min_price or max_price:
-        price_range = {}
-        if min_price: price_range["gte"] = min_price
-        if max_price: price_range["lte"] = max_price
-        query["bool"]["filter"].append({"range": {"price_min": price_range}}) # NOTE: Filter uses the min field in the demand index
+    # --- Price Range Intersection ---
+    # Price OR-overlap
+    if price_min or price_max:
+        should_clauses = []
+
+        # Condition 1: user_min lies within doc range
+        if price_min:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"price_min": {"lte": price_min}}},
+                        {"range": {"price_max": {"gte": price_min}}}
+                    ]
+                }
+            })
+
+        # Condition 2: user_max lies within doc range
+        if price_max:
+            should_clauses.append({
+                "bool": {
+                    "must": [
+                        {"range": {"price_min": {"lte": price_max}}},
+                        {"range": {"price_max": {"gte": price_max}}}
+                    ]
+                }
+            })
+
+        # Add OR conditions
+        query["bool"]["filter"].append({
+            "bool": {
+                "should": should_clauses,
+                "minimum_should_match": 1
+            }
+        })
+
+ 
 
 
     body = {"query": query, "size": size}
