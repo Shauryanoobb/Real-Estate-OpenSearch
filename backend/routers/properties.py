@@ -34,11 +34,15 @@ def prepare_and_index(sql_model, index_name: str, id_key: str):
 
 # --- HELPER: Creates a search query based on a specific Supply/Demand object ---
 #i think we need to work A LOT ON THIS, it has to be made softer, include should, ask popsi
-def create_cross_search_query(target_index: str, source_model):
+def create_cross_search_query(target_index: str, source_model, customer_id: str):
     """
     Creates an OpenSearch query in the target index based on the specs of the source model.
+    Filters by customer_id for data isolation.
     """
     query = {"bool": {"must": [], "should": [], "filter": []}}
+
+    # 0. ALWAYS filter by customer_id for data isolation
+    query["bool"]["filter"].append({"term": {"customer_id": customer_id}})
 
     # 1. Matching core fields
     if source_model.locality:
@@ -115,7 +119,7 @@ def add_supply(
         opensearch_id = prepare_and_index(sql_model, INDEX_SUPPLY, 'id')
         
         # 3. CROSS-SEARCH (Back Search: Match new Supply against existing Demand)
-        search_body = create_cross_search_query(INDEX_DEMAND, property_data)
+        search_body = create_cross_search_query(INDEX_DEMAND, property_data, current_user.id)
         matching_demand = client.search(index=INDEX_DEMAND, body=search_body)
         
     except Exception as e:
@@ -261,7 +265,7 @@ def add_demand(
         opensearch_id = prepare_and_index(sql_model, INDEX_DEMAND, 'id')
         
         # 3. CROSS-SEARCH (Back Search: Match new Demand against existing Supply)
-        search_body = create_cross_search_query(INDEX_SUPPLY, request_data)
+        search_body = create_cross_search_query(INDEX_SUPPLY, request_data, current_user.id)
         matching_supply = client.search(index=INDEX_SUPPLY, body=search_body)
         
     except Exception as e:
